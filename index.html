@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calculator K6 - Final v46</title>
+    <title>Calculator K6 - Final v49</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css"/>
@@ -77,7 +77,6 @@
 
         * { box-sizing: border-box; }
         
-        /* --- ΒΕΛΤΙΩΣΗ ΓΙΑ ΤΟ SCROLL --- */
         html, body {
             overflow-x: hidden;
             width: 100%;
@@ -105,7 +104,6 @@
             transition: background-color 0.3s;
         }
 
-        /* --- SETTINGS BUTTON (Gear) --- */
         .settings-toggle {
             position: absolute;
             top: 20px; right: 20px;
@@ -300,6 +298,8 @@
     <div class="history-hint">History: PageUp / PageDown</div>
 
     <div class="keypad">
+        <div></div> <div></div> <div></div> <div></div> <button class="theory" onclick="insertTheory('DIVs')" data-tooltip="Όλοι οι Διαιρέτες. Παράδειγμα: DIVs(12)">DIVs</button>
+
         <button class="theory" onclick="insertTheory('E-DIV')" data-tooltip="Ευκλείδια Διαίρεση (κάθετη). Παράδειγμα: E-DIV(245;7)">E-DIV</button>
         <button class="theory" onclick="insertTheory('V-MUL')" data-tooltip="Κάθετος Πολλαπλασιασμός. Παράδειγμα: V-MUL(12,5;8)">V-MUL</button>
         <button class="theory" onclick="insertTheory('LCM')" data-tooltip="Ελάχιστο Κοινό Πολλαπλάσιο (ΕΚΠ). Παράδειγμα: LCM(12;18)">LCM</button>
@@ -346,7 +346,7 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v46</div>
+        <div class="modal-version">v49</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
@@ -366,12 +366,10 @@
 <script>
     // --- SMART FOCUS HELPER (Hybrid Keypad Logic) ---
     function smartFocus() {
-        // If mobile, blur the hidden input to keep keyboard closed
         if (window.innerWidth <= 600) {
             const hiddenArea = document.querySelector('#math-input textarea');
             if (hiddenArea) hiddenArea.blur();
         } else {
-            // If desktop, focus to allow typing
             mathField.focus();
         }
     }
@@ -388,7 +386,7 @@
         if(mathField) smartFocus(); 
     });
 
-    // --- GLOBAL CLICK HANDLER (The "Traffic Cop") ---
+    // --- GLOBAL CLICK HANDLER ---
     document.getElementById('calc-body').addEventListener('click', function(e) {
         if (e.target.tagName === 'BUTTON' || e.target.closest('.settings-toggle')) return;
         
@@ -487,10 +485,11 @@
         steps.push(`<div class="ld-row">${dividendStr}</div>`);
         
         for (let i = 0; i < digits.length; i++) {
+            let previousRem = currentVal; 
             currentVal = currentVal * 10 + digits[i];
             
             if (hasStartedPrinting) {
-                let valStr = currentVal.toString();
+                let valStr = (previousRem === 0) ? ("0" + digits[i]) : currentVal.toString();
                 let indent = (i + 1) - valStr.length;
                 let spaces = " ".repeat(indent);
                 steps.push(`<div class="ld-row">${spaces}${valStr}</div>`);
@@ -605,8 +604,7 @@
         for (let i = 0; i < digitsB.length; i++) {
             let digit = digitsB[i];
             let product = intA * digit;
-            // Removed regex dots from partial products (User Request v46)
-            let pDisplay = product.toString();
+            let pDisplay = product.toString(); 
             
             let cells = [];
             let cleanDigits = [];
