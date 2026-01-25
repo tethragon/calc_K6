@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calculator K6 - v43 (Modal Settings)</title>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #f0f4f8;
+            --bg-calc: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #dddddd;
+            --input-bg: #ffffff;
+            --input-border: #0056b3;
+            --btn-base-bg: #eef2f5;
+            --btn-base-text: #333333;
+            --btn-base-hover: #dbe2e8;
+            --btn-op-bg: #e0ebff;
+            --btn-op-text: #0056b3;
+            --btn-theory-bg: #f3e5f5;
+            --btn-theory-text: #7b1fa2;
+            --btn-alg-bg: #fff3e0;
+            --btn-alg-text: #e65100;
+            --btn-clear-bg: #ffecec;
+            --btn-clear-text: #d32f2f;
+            --btn-ans-bg: #e8f5e9;
+            --btn-ans-text: #2e7d32;
+            --btn-action-bg: #0056b3;
+            --btn-action-text: #ffffff;
+            --btn-action-hover: #004494;
+            --result-bg: #fafafa;
+            --line-color: #333333; 
+            --quotient-color: #2e7d32;
+            --highlight-color: #0056b3;
+            --modal-overlay: rgba(0, 0, 0, 0.5);
+            --modal-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #121212;
+            --bg-calc: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --border-color: #444444;
+            --input-bg: #2d2d2d;
+            --input-border: #64b5f6;
+            --btn-base-bg: #333333;
+            --btn-base-text: #e0e0e0;
+            --btn-base-hover: #444444;
+            --btn-op-bg: #1a237e;
+            --btn-op-text: #8c9eff;
+            --btn-theory-bg: #4a148c;
+            --btn-theory-text: #ea80fc;
+            --btn-alg-bg: #3e2723;
+            --btn-alg-text: #ffcc80;
+            --btn-clear-bg: #b71c1c;
+            --btn-clear-text: #ffcdd2;
+            --btn-ans-bg: #1b5e20;
+            --btn-ans-text: #a5d6a7;
+            --btn-action-bg: #1565c0;
+            --btn-action-text: #ffffff;
+            --btn-action-hover: #0d47a1;
+            --result-bg: #262626;
+            --line-color: #dddddd; 
+            --quotient-color: #66bb6a;
+            --highlight-color: #64b5f6;
+            --modal-overlay: rgba(0, 0, 0, 0.7);
+            --modal-bg: #2d2d2d;
+        }
+
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main);
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; 
+            transition: background-color 0.3s;
+        }
+        
+        .calculator { 
+            background: var(--bg-calc); 
+            padding: 25px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            width: 95%; max-width: 600px;
+            cursor: text; 
+            position: relative;
+            transition: background-color 0.3s;
+        }
+
+        /* --- SETTINGS BUTTON (Gear) --- */
+        .settings-toggle {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: none; border: none;
+            font-size: 24px; cursor: pointer;
+            color: var(--text-main);
+            padding: 0;
+            z-index: 10;
+            opacity: 0.6;
+            transition: opacity 0.2s, transform 0.3s;
+        }
+        .settings-toggle:hover { opacity: 1; transform: rotate(90deg); }
+
+        h3 { 
+            text-align: center; 
+            color: var(--text-main); 
+            margin-top: 0; 
+            margin-bottom: 20px; 
+        }
+
+        #math-input { 
+            width: 100%; font-size: 26px; padding: 10px; 
+            border: 2px solid var(--input-border); 
+            border-radius: 10px; margin-bottom: 5px; 
+            background: var(--input-bg); 
+            color: var(--text-main);
+            min-height: 60px; display: flex; align-items: center; 
+            position: relative; z-index: 1;
+        }
+        .mq-math-mode { color: var(--text-main); }
+        .mq-root-block { color: var(--text-main); }
+        
+        .history-hint { 
+            font-size: 11px; 
+            color: var(--text-muted); 
+            text-align: right; 
+            margin-bottom: 15px; 
+            font-style: italic; 
+            cursor: default;
+        }
+
+        .keypad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; position: relative; z-index: 1;}
+        
+        button {
+            padding: 12px; font-size: 18px; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s;
+            background-color: var(--btn-base-bg); color: var(--btn-base-text); font-weight: bold;
+            -webkit-tap-highlight-color: transparent;
+        }
+        button:hover { background-color: var(--btn-base-hover); }
+        button:active { transform: scale(0.96); }
+        
+        button.operator { background-color: var(--btn-op-bg); color: var(--btn-op-text); }
+        button.theory { background-color: var(--btn-theory-bg); color: var(--btn-theory-text); font-size: 14px; text-transform: uppercase; }
+        button.algebra { background-color: var(--btn-alg-bg); color: var(--btn-alg-text); font-size: 18px; font-style: italic; font-family: 'Times New Roman', serif; }
+        
+        button.action { background-color: var(--btn-action-bg); color: var(--btn-action-text); font-size: 20px; }
+        button.action:hover { background-color: var(--btn-action-hover); }
+        button.clear { background-color: var(--btn-clear-bg); color: var(--btn-clear-text); }
+        button.ans { background-color: var(--btn-ans-bg); color: var(--btn-ans-text); font-weight: 900; }
+
+        .results-area { 
+            margin-top: 20px; padding: 15px; 
+            border-top: 2px dashed var(--border-color); 
+            background: var(--result-bg); 
+            border-radius: 8px; min-height: 100px; 
+            display: none; cursor: default; 
+            color: var(--text-main);
+            position: relative; z-index: 1;
+        }
+        
+        .theory-title { 
+            font-size: 16px; color: var(--text-muted); 
+            margin-bottom: 10px; text-transform: uppercase; 
+            font-weight: bold; text-align: center; 
+            border-bottom: 1px solid var(--border-color); 
+            padding-bottom: 5px; 
+        }
+        
+        /* --- MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--modal-overlay);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        
+        .modal-content {
+            background-color: var(--modal-bg);
+            color: var(--text-main);
+            width: 90%; max-width: 350px;
+            padding: 25px; border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            transform: scale(0.9); transition: transform 0.3s;
+            border: 1px solid var(--border-color);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        
+        .modal-header { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+        .modal-version { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+        
+        .modal-btn-row { margin: 15px 0; }
+        .modal-theme-btn {
+            width: 100%; padding: 12px; background: var(--btn-base-bg);
+            color: var(--text-main); border: 1px solid var(--border-color);
+            border-radius: 8px; font-size: 16px; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .modal-theme-btn:hover { background: var(--btn-base-hover); }
+
+        .modal-credit {
+            margin-top: 25px; margin-bottom: 25px;
+            padding-top: 15px; border-top: 1px solid var(--border-color);
+        }
+        .credit-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .credit-name { font-size: 14px; font-weight: bold; color: var(--highlight-color); margin-top: 5px; font-family: 'Segoe UI', sans-serif;}
+
+        .modal-close {
+            background: var(--btn-action-bg); color: white;
+            padding: 10px 30px; border-radius: 20px; font-size: 16px; border: none;
+            cursor: pointer; width: 100%;
+        }
+        .modal-close:hover { background: var(--btn-action-hover); }
+
+        /* --- LONG DIVISION & VMUL Styles (Same as before) --- */
+        .long-div-container { display: flex; justify-content: center; font-family: 'Consolas', 'Courier New', monospace; font-size: 24px; color: var(--text-main); line-height: 1.5; letter-spacing: 2px; }
+        .ld-left-col { display: flex; flex-direction: column; align-items: flex-start; margin-right: 15px; position: relative; }
+        .ld-row { white-space: pre; position: relative; margin-bottom: 2px; } 
+        .ld-minus { position: absolute; left: -15px; font-weight: bold; color: var(--text-main); }
+        .ld-subtrahend { border-bottom: 2px solid var(--line-color); display: inline-block; padding-bottom: 2px; margin-bottom: 3px; }
+        .ld-right-col { border-left: 3px solid var(--line-color); padding-left: 10px; display: flex; flex-direction: column; }
+        .ld-divisor { border-bottom: 3px solid var(--line-color); padding-bottom: 5px; margin-bottom: 5px; font-weight: bold; }
+        .ld-quotient { color: var(--quotient-color); font-weight: bold; font-size: 28px; letter-spacing: 2px; }
+
+        .vmul-grid { display: grid; justify-content: center; font-family: 'Consolas', 'Courier New', monospace; font-size: 24px; color: var(--text-main); column-gap: 0.1ch; row-gap: 2px; width: fit-content; margin: 0 auto; }
+        .grid-cell { width: 1.5ch; text-align: center; position: relative; height: 1.5em; display: flex; align-items: center; justify-content: center; }
+        .grid-border { grid-column: 1 / -1; border-bottom: 3px solid var(--line-color); height: 5px; margin-bottom: 5px; }
+        .grid-operator { font-weight: bold; color: var(--text-main); }
+        .ghost-comma, .ghost-dot { position: absolute; bottom: 3px; right: -0.4ch; font-weight: bold; color: inherit; pointer-events: none; line-height: 1; }
+        .result-cell { color: var(--highlight-color); font-weight: bold; }
+        .partial-cell { color: var(--text-muted); }
+
+        .std-result-row { display: grid; grid-template-columns: 80px 40px 1fr; align-items: center; margin-bottom: 10px; font-size: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; font-family: 'Segoe UI', sans-serif; letter-spacing: normal; }
+        .label { color: var(--text-muted); font-size: 16px; }
+        .prefix { color: var(--text-main); font-weight: bold; font-style: italic; font-family: 'Times New Roman', serif; text-align: right; padding-right: 5px;}
+        .value { font-weight: bold; font-size: 22px; color: var(--highlight-color); }
+        .fraction-render { display: inline-block; vertical-align: middle; text-align: center; font-size: 0.8em; margin: 0 2px; }
+        .frac-top { border-bottom: 2px solid currentColor; display: block; padding: 0 2px; }
+        .frac-bottom { display: block; padding: 0 2px; }
+        .divisors-list { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 10px; }
+        .divisor-tag { background: #7b1fa2; color: white; padding: 4px 10px; border-radius: 12px; font-size: 16px; }
+        .simp-info { margin-top: 5px; font-size: 14px; color: var(--quotient-color); font-style: italic; text-align: right; grid-column: 3; }
+
+        button.theory { position: relative; }
+        button.theory::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background-color: var(--bg-calc); color: var(--text-main); padding: 6px 10px; border-radius: 4px; font-size: 12px; white-space: nowrap; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid var(--border-color); z-index: 100; pointer-events: none; font-weight: normal; text-transform: none; letter-spacing: normal; text-align: center; }
+        button.theory:hover::after { opacity: 1; visibility: visible; bottom: 120%; }
+
+        @media (max-width: 600px) {
+            .calculator { padding: 15px; }
+            button { padding: 10px 0; font-size: 16px; }
+            .keypad { gap: 5px; }
+            button.theory { font-size: 11px; }
+            #math-input { font-size: 22px; min-height: 50px; }
+            .long-div-container, .vmul-grid { font-size: 20px; }
+            .ld-quotient { font-size: 24px; }
+            .std-result-row { grid-template-columns: 70px 30px 1fr; font-size: 16px; }
+            .value { font-size: 20px; }
+            button.theory::after { font-size: 10px; padding: 4px 6px; bottom: 110%; white-space: normal; width: 120px; }
+            button.theory:hover::after { bottom: 115%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator" id="calc-body">
+    <button class="settings-toggle" onclick="openSettings()" title="Ρυθμίσεις & Πληροφορίες">⚙️</button>
+    
+    <h3>Calculator K6</h3>
+    
+    <div id="math-input"></div>
+    
+    <div class="history-hint">History: PageUp / PageDown</div>
+
+    <div class="keypad">
+        <button class="theory" onclick="insertTheory('E-DIV')" data-tooltip="Ευκλείδια Διαίρεση (κάθετη). Παράδειγμα: E-DIV(245;7)">E-DIV</button>
+        <button class="theory" onclick="insertTheory('V-MUL')" data-tooltip="Κάθετος Πολλαπλασιασμός. Παράδειγμα: V-MUL(12,5;8)">V-MUL</button>
+        <button class="theory" onclick="insertTheory('LCM')" data-tooltip="Ελάχιστο Κοινό Πολλαπλάσιο (ΕΚΠ). Παράδειγμα: LCM(12;18)">LCM</button>
+        <button class="theory" onclick="insertTheory('GCD')" data-tooltip="Μέγιστος Κοινός Διαιρέτης (ΜΚΔ). Παράδειγμα: GCD(24;36)">GCD</button>
+        <button class="theory" onclick="insertTheory('FACTORS')" data-tooltip="Γινόμενο Πρώτων Παραγόντων. Παράδειγμα: FACTORS(56)">FACTORS</button>
+        
+        <button class="clear" onclick="clearInput()">C</button>
+        <button onclick="writeCmd('(')">(</button>
+        <button onclick="writeCmd(')')">)</button>
+        <button class="operator" onclick="writeCmd('^')">xʸ</button>
+        <button class="operator" onclick="writeCmd(':')">:</button>
+
+        <button onclick="writeCmd('7')">7</button>
+        <button onclick="writeCmd('8')">8</button>
+        <button onclick="writeCmd('9')">9</button>
+        <button class="algebra" onclick="writeCmd('x')">x</button>
+        <button class="operator" onclick="writeCmd('\\cdot')">×</button>
+
+        <button onclick="writeCmd('4')">4</button>
+        <button onclick="writeCmd('5')">5</button>
+        <button onclick="writeCmd('6')">6</button>
+        <button class="algebra" onclick="writeCmd('=')">=</button>
+        <button class="operator" onclick="writeCmd('-')">-</button>
+
+        <button onclick="writeCmd('1')">1</button>
+        <button onclick="writeCmd('2')">2</button>
+        <button onclick="writeCmd('3')">3</button>
+        <button onclick="writeCmd(';')" style="color:red; font-weight:900;">;</button>
+        <button class="operator" onclick="writeCmd('+')">+</button>
+
+        <button class="ans" onclick="insertAns()">ANS</button>
+        <button onclick="writeCmd('0')">0</button>
+        <button onclick="writeCmd('.')">,</button>
+        <button class="operator" onclick="writeCmd('/')">a/b</button>
+        <button class="action" onclick="calculate()">=</button>
+    </div>
+
+    <div class="results-area" id="results">
+        <div id="theory-title" class="theory-title"></div>
+        <div id="res-content"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
+    <div class="modal-content">
+        <div class="modal-header">Calculator K6</div>
+        <div class="modal-version">v43 Beta</div>
+        
+        <div class="modal-btn-row">
+            <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
+                <span id="theme-icon">🌙</span> <span id="theme-text">Enable Dark Mode</span>
+            </button>
+        </div>
+        
+        <div class="modal-credit">
+            <div class="credit-label">Program Architect</div>
+            <div class="credit-name">George Petrakis</div>
+        </div>
+        
+        <button class="modal-close" onclick="closeSettings()">Close</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('calc_theme') || 'light';
+        document.body.setAttribute('data-theme', savedTheme);
+        updateModalThemeButton(savedTheme);
+
+        const savedHistory = localStorage.getItem('calc_history');
+        if (savedHistory) {
+            try { calcHistory = JSON.parse(savedHistory); } catch (e) { calcHistory = []; }
+        }
+        if(mathField) mathField.focus();
+    });
+
+    // --- SETTINGS MODAL LOGIC ---
+    function openSettings() {
+        document.getElementById('settings-modal').classList.add('active');
+    }
+
+    function closeSettings(e) {
+        // If 'e' is present, check if click was on overlay (background) not content
+        if (e && e.target !== e.currentTarget) return;
+        document.getElementById('settings-modal').classList.remove('active');
+        if(mathField) mathField.focus();
+    }
+
+    function toggleThemeInsideModal() {
+        const body = document.body;
+        const current = body.getAttribute('data-theme');
+        const newTheme = current === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('calc_theme', newTheme);
+        updateModalThemeButton(newTheme);
+    }
+
+    function updateModalThemeButton(theme) {
+        const icon = document.getElementById('theme-icon');
+        const text = document.getElementById('theme-text');
+        if (theme === 'dark') {
+            icon.innerHTML = '☀️';
+            text.innerHTML = 'Switch to Light Mode';
+        } else {
+            icon.innerHTML = '🌙';
+            text.innerHTML = 'Switch to Dark Mode';
+        }
+    }
+
+    let calcHistory = [];
+    let historyIndex = -1;
+    let currentDraft = "";
+    let lastAns = null; 
+
+    math.import({
+        allDivisors: function(n) {
+            if (n <= 0 || !Number.isInteger(n)) throw new Error("Integer > 0 required");
+            let small = [], large = [], end = Math.floor(Math.sqrt(n));
+            for (let i = 1; i <= end; i++) {
+                if (n % i === 0) {
+                    small.push(i);
+                    if (i * i !== n) large.push(n / i);
+                }
+            }
+            large.reverse();
+            return small.concat(large);
+        },
+        myFactors: function(n) {
+            if (n < 2 || !Number.isInteger(n)) return [n];
+            var factors = [];
+            var d = 2;
+            while (n % 2 === 0) { factors.push(2); n /= 2; }
+            d = 3;
+            while (d * d <= n) {
+                while (n % d === 0) { factors.push(d); n /= d; }
+                d += 2;
+            }
+            if (n > 1) factors.push(n);
+            return factors;
+        }
+    });
+
+    // --- LONG DIVISION (E-DIV) ---
+    function generateLongDivision(dividend, divisor) {
+        if (!Number.isInteger(dividend) || !Number.isInteger(divisor)) return { error: "Integers Only" };
+        if (divisor === 0) return { error: "Div by 0" };
+        if (dividend < 0 || divisor < 0) return { error: "Positive only" };
+        
+        let dividendStr = dividend.toString();
+        let digits = dividendStr.split('').map(Number);
+        let steps = [];
+        let quotientStr = "";
+        let currentVal = 0;
+        let hasStartedPrinting = false;
+        
+        steps.push(`<div class="ld-row">${dividendStr}</div>`);
+        
+        for (let i = 0; i < digits.length; i++) {
+            currentVal = currentVal * 10 + digits[i];
+            
+            if (hasStartedPrinting) {
+                let valStr = currentVal.toString();
+                let indent = (i + 1) - valStr.length;
+                let spaces = " ".repeat(indent);
+                steps.push(`<div class="ld-row">${spaces}${valStr}</div>`);
+            }
+            
+            if (currentVal < divisor) {
+                if (quotientStr.length > 0) quotientStr += "0";
+                continue;
+            }
+            
+            let q = Math.floor(currentVal / divisor);
+            let prod = q * divisor;
+            let rem = currentVal - prod;
+            quotientStr += q;
+            hasStartedPrinting = true;
+
+            let prodStr = prod.toString();
+            let indent = (i + 1) - prodStr.length;
+            let spaces = " ".repeat(indent);
+            
+            steps.push(`<div class="ld-row">${spaces}<span class="ld-minus">-</span><span class="ld-subtrahend">${prodStr}</span></div>`);
+            currentVal = rem;
+        }
+        
+        if (hasStartedPrinting) {
+            let remStr = currentVal.toString();
+            let remIndent = digits.length - remStr.length;
+            steps.push(`<div class="ld-row">${" ".repeat(remIndent)}${remStr}</div>`);
+        }
+
+        if (quotientStr === "") quotientStr = "0";
+
+        return { steps: steps, quotient: quotientStr, remainder: currentVal };
+    }
+
+    // --- HELPER: FORMAT STANDARD (1.234,56) ---
+    function formatStandard(numStr) {
+        let parts = numStr.toString().split('.');
+        let integerPart = parts[0];
+        let decimalPart = parts[1] || "";
+        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return integerPart + (decimalPart ? "," + decimalPart : "");
+    }
+
+    // --- GRID V-MUL GENERATOR ---
+    function generateGridMultiplication(a, b) {
+        if (a < 0 || b < 0) return { error: "Positive only" };
+
+        let strA = a.toString();
+        let strB = b.toString();
+        
+        let decimalsA = (strA.split('.')[1] || []).length;
+        let decimalsB = (strB.split('.')[1] || []).length;
+        let totalDecimals = decimalsA + decimalsB;
+
+        let intA = parseInt(strA.replace('.', ''));
+        let intB = parseInt(strB.replace('.', ''));
+
+        // Prepare Display Strings (Standard Format 1.234,56)
+        let displayA = formatStandard(strA);
+        let displayB = formatStandard(strB);
+
+        // Digits for Calculation (Integers)
+        let digitsB = intB.toString().split('').map(Number).reverse();
+        
+        // Calculate Grid Width
+        // The width must accommodate the final result length + partial shifts
+        let finalIntResult = (BigInt(intA) * BigInt(intB)).toString();
+        // Width estimation: max(lenA, lenB, finalLen) + extra for operator
+        let cols = Math.max(displayA.replace(/[.,]/g,'').length, displayB.replace(/[.,]/g,'').length, finalIntResult.length) + 2; 
+
+        // Helper to Create Row Cells
+        function createRowCells(formattedStr, totalCols, isResult = false, prefix = null) {
+            let cells = [];
+            // Remove marks for counting, but keep logic for ghost rendering
+            // We iterate string chars. If char is digit, it's a cell. 
+            // If char is '.' or ',', it attaches to previous cell.
+            let cleanDigits = [];
+            for (let i=0; i<formattedStr.length; i++) {
+                let char = formattedStr[i];
+                if (char === '.' || char === ',') {
+                    if (cleanDigits.length > 0) {
+                        cleanDigits[cleanDigits.length-1].mark = char;
+                    }
+                } else {
+                    cleanDigits.push({ val: char, mark: null });
+                }
+            }
+
+            // Fill empty cells on the left
+            let emptyCount = totalCols - cleanDigits.length;
+            // If we have a prefix (like operator), it goes in the cell BEFORE the first digit (or further left)
+            
+            // Layout: [Empty...][Prefix][Digits...]
+            // We align Right.
+            
+            for(let k=0; k<totalCols; k++) {
+                // Determine what goes in this cell index (0 to totalCols-1)
+                // The digits occupy indices: [totalCols - len] to [totalCols - 1]
+                let digitIndex = k - (totalCols - cleanDigits.length);
+                
+                let cellContent = "";
+                let cellClass = isResult ? "grid-cell result-cell" : "grid-cell";
+                if (!isResult && prefix && k === (totalCols - cleanDigits.length - 1)) {
+                    // Place prefix just left of digits
+                    cellContent = `<span class="grid-operator">${prefix}</span>`;
+                } else if (digitIndex >= 0) {
+                    let d = cleanDigits[digitIndex];
+                    let ghost = "";
+                    if (d.mark === ',') ghost = '<span class="ghost-comma">,</span>';
+                    if (d.mark === '.') ghost = '<span class="ghost-dot">.</span>';
+                    cellContent = `${d.val}${ghost}`;
+                } else if (prefix && k===0 && (totalCols - cleanDigits.length - 1) < 0) {
+                     // Edge case if no space
+                     cellContent = `<span class="grid-operator">${prefix}</span>`;
+                }
+
+                cells.push(`<div class="${cellClass}">${cellContent}</div>`);
+            }
+            return cells.join("");
+        }
+
+        let gridHtml = `<div class="vmul-grid" style="grid-template-columns: repeat(${cols}, auto);">`;
+        
+        // Row 1: A
+        gridHtml += createRowCells(displayA, cols);
+        // Row 2: Operator + B
+        gridHtml += createRowCells(displayB, cols, false, "×");
+        // Border
+        gridHtml += `<div class="grid-border"></div>`;
+
+        // Partial Products
+        for (let i = 0; i < digitsB.length; i++) {
+            let digit = digitsB[i];
+            let product = intA * digit;
+            // Add thousands dots to partial product (integer)
+            let pDisplay = product.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            
+            // Visual Padding (shift left by i positions means we effectively append i zeros visually)
+            // But in our Grid Logic, "shift left" means the digits end at col (total - 1 - i)
+            // Wait, standard mult shifts LEFT. 
+            // 1st partial ends at last col.
+            // 2nd partial ends at last col - 1.
+            
+            // Let's adjust createRowCells to accept an "endOffset"
+            
+            let cells = [];
+            let cleanDigits = [];
+            for (let char of pDisplay) {
+                if (char === '.') { if (cleanDigits.length>0) cleanDigits[cleanDigits.length-1].mark = '.'; }
+                else cleanDigits.push({val: char, mark: null});
+            }
+            
+            let effectiveLen = cleanDigits.length;
+            let endPos = cols - 1 - i; // Shift left by i
+            let startPos = endPos - effectiveLen + 1;
+            
+            let prefix = (digitsB.length > 1 && i === digitsB.length - 1) ? "+" : "";
+            
+            if (digitsB.length > 1) {
+                for(let k=0; k<cols; k++) {
+                    let cellContent = "";
+                    let cellClass = "grid-cell partial-cell";
+                    
+                    if (k >= startPos && k <= endPos) {
+                        let d = cleanDigits[k - startPos];
+                        let ghost = (d.mark === '.') ? '<span class="ghost-dot">.</span>' : '';
+                        cellContent = `${d.val}${ghost}`;
+                    }
+                    
+                    if (prefix && k === startPos - 1) {
+                        cellContent = `<span class="grid-operator">${prefix}</span>`;
+                    }
+                    
+                    cells.push(`<div class="${cellClass}">${cellContent}</div>`);
+                }
+                gridHtml += cells.join("");
+            }
+        }
+
+        if (digitsB.length > 1) {
+            gridHtml += `<div class="grid-border"></div>`;
+        }
+
+        // Final Result
+        // Pad result string
+        while (finalIntResult.length <= totalDecimals) {
+            finalIntResult = "0" + finalIntResult;
+        }
+        
+        let rawResultStr = "";
+        if (totalDecimals > 0) {
+            let splitIdx = finalIntResult.length - totalDecimals;
+            rawResultStr = finalIntResult.slice(0, splitIdx) + "." + finalIntResult.slice(splitIdx);
+        } else {
+            rawResultStr = finalIntResult;
+        }
+        
+        let finalDisplay = formatStandard(rawResultStr);
+        gridHtml += createRowCells(finalDisplay, cols, true);
+        
+        gridHtml += `</div>`;
+        
+        return { visual: gridHtml };
+    }
+
+    var MQ = MathQuill.getInterface(2);
+    var mathField = MQ.MathField(document.getElementById('math-input'), {
+        spaceBehavesLikeTab: true,
+        handlers: { edit: function() {} }
+    });
+
+    $(document).ready(function() { mathField.focus(); });
+    document.getElementById('calc-body').addEventListener('click', function(e) {
+        if (e.target.tagName !== 'BUTTON' && !e.target.closest('.settings-toggle')) mathField.focus();
+    });
+
+    function writeCmd(cmd) {
+        if (cmd === '/') mathField.cmd('\\frac');
+        else mathField.cmd(cmd);
+        mathField.focus();
+    }
+    
+    function insertTheory(name) {
+        mathField.write('\\text{' + name + '}\\left(\\right)');
+        mathField.keystroke('Left'); 
+        mathField.focus();
+    }
+    
+    function insertAns() {
+        if (lastAns === null) return;
+        mathField.write(lastAns);
+        mathField.focus();
+    }
+
+    function clearInput() {
+        mathField.latex('');
+        document.getElementById('results').style.display = 'none';
+        historyIndex = -1;
+        currentDraft = ""; 
+        mathField.focus();
+    }
+
+    function formatPrimeFactors(factorsArray) {
+        if (!Array.isArray(factorsArray)) return factorsArray;
+        const counts = {};
+        factorsArray.forEach(x => { counts[x] = (counts[x] || 0) + 1; });
+        let parts = [];
+        Object.keys(counts).sort((a,b)=>a-b).forEach(base => {
+            let power = counts[base];
+            parts.push(power === 1 ? base : `${base}<sup>${power}</sup>`);
+        });
+        return parts.join(' &middot; ');
+    }
+
+    function renderFraction(num, den, sign) {
+        return `<span class="value">${sign}<div class="fraction-render"><span class="frac-top">${Math.abs(num)}</span><span class="frac-bottom">${Math.abs(den)}</span></div></span>`;
+    }
+
+    function solveLinearEquation(eqStr) {
+        const match = eqStr.match(/[a-zA-Z\u0370-\u03FF]/);
+        const variable = match ? match[0] : 'x';
+        const parts = eqStr.split('=');
+        if (parts.length !== 2) throw new Error("Invalid Equation");
+        const expression = `(${parts[0]}) - (${parts[1]})`;
+        const scope0 = {}; scope0[variable] = 0;
+        const b_term = math.evaluate(expression, scope0);
+        const scope1 = {}; scope1[variable] = 1;
+        const valAt1 = math.evaluate(expression, scope1);
+        const a_term = valAt1 - b_term;
+        if (math.abs(a_term) < 1e-10) {
+            if (math.abs(b_term) < 1e-10) return "Identity (Όλοι οι αριθμοί)";
+            else return "Impossible (Αδύνατη)";
+        }
+        return { val: -b_term / a_term, variable: variable };
+    }
+
+    function parseLatexFractions(str) {
+        while (str.indexOf('\\frac') !== -1) {
+            let i = str.indexOf('\\frac');
+            let startNum = str.indexOf('{', i); 
+            if (startNum === -1) break;
+            let [num, endNum] = extractBalancedBlock(str, startNum);
+            let startDen = str.indexOf('{', endNum);
+            if (startDen === -1) break;
+            let [den, endDen] = extractBalancedBlock(str, startDen);
+            let replacement = `(${num})/(${den})`;
+            str = str.substring(0, i) + replacement + str.substring(endDen);
+        }
+        return str;
+    }
+
+    function extractBalancedBlock(str, startIndex) {
+        let count = 0;
+        for (let i = startIndex; i < str.length; i++) {
+            if (str[i] === '{') count++;
+            else if (str[i] === '}') count--;
+            if (count === 0) return [str.substring(startIndex + 1, i), i + 1];
+        }
+        return ["", str.length];
+    }
+
+    function extractArgsForDisplay(cleanStr) {
+        let match = cleanStr.match(/\((.*)\)/);
+        if (match) {
+            return match[1].replace(/,/g, '; ');
+        }
+        return "";
+    }
+
+    function calculate(isHistoryReplay = false) {
+        let latex = mathField.latex();
+        if(!latex && !isHistoryReplay) { mathField.focus(); return; }
+
+        let cleanStr = latex;
+        if (lastAns !== null) cleanStr = cleanStr.replace(/\\text\{Ans\}/g, `(${lastAns})`);
+        cleanStr = cleanStr.replace(/(\d+)\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1+\\frac{$2}{$3})');
+        cleanStr = parseLatexFractions(cleanStr);
+
+        cleanStr = cleanStr.replace(/\\text\{LCM\}/g, "lcm");
+        cleanStr = cleanStr.replace(/\\text\{GCD\}/g, "gcd");
+        cleanStr = cleanStr.replace(/\\text\{FACTORS\}/g, "myFactors");
+        cleanStr = cleanStr.replace(/\\text\{DIVs\}/g, "allDivisors");
+        cleanStr = cleanStr.replace(/\\text\{E-DIV\}/g, "euclidean");
+        cleanStr = cleanStr.replace(/\\text\{V-MUL\}/g, "verticalMul");
+
+        cleanStr = cleanStr
+            .replace(/\\left/g, "").replace(/\\right/g, "") 
+            .replace(/\\:/g, " ")
+            .replace(/:/g, "/")
+            .replace(/\\div/g, "/")
+            .replace(/\\cdot/g, "*").replace(/\\times/g, "*")
+            .replace(/,/g, ".")
+            // Fix: handle semicolon specially for V-MUL arguments
+            // We temporarily replace semicolon with a placeholder if inside verticalMul?
+            // Or just ensure we parse verticalMul arguments carefully.
+            // Simplified: let's assume ; is used as argument separator in verticalMul
+            // but standard math.evaluate uses comma. We need to swap back if it's not vmul?
+            // Actually, mathjs handles comma as separator. We should replace ; with , for mathjs
+            .replace(/;/g, ",") 
+            .replace(/{/g, "(").replace(/}/g, ")")
+            .replace(/\\/g, "");
+
+        document.getElementById('results').style.display = 'block';
+        const titleEl = document.getElementById('theory-title');
+        const contentEl = document.getElementById('res-content');
+        
+        try {
+            let simpleFracRegex = /^\(?(\d+)\)?\/\(?(\d+)\)?$/;
+            let fracMatch = cleanStr.match(simpleFracRegex);
+            let simpInfo = null;
+
+            if (fracMatch) {
+                let n = parseInt(fracMatch[1]);
+                let d = parseInt(fracMatch[2]);
+                if (d !== 0) {
+                    let common = math.gcd(n, d);
+                    if (common > 1) {
+                        simpInfo = `Απλοποίηση: Διαιρέσαμε με το ΜΚΔ (${common})`;
+                    }
+                }
+            }
+
+            if (cleanStr.includes('=')) {
+                titleEl.innerText = "Λύση Εξίσωσης";
+                const solution = solveLinearEquation(cleanStr);
+                if (typeof solution === 'string') {
+                    contentEl.innerHTML = `<span class="value">${solution}</span>`;
+                } else {
+                    displayNumericResult(solution.val, contentEl, `${solution.variable} =`);
+                }
+            } else {
+                const isLCM = latex.includes('LCM');
+                const isGCD = latex.includes('GCD');
+                const isFactors = latex.includes('FACTORS');
+                const isDivisors = latex.includes('DIVs');
+                const runEuclidean = cleanStr.includes('euclidean');
+                const runVMul = cleanStr.includes('verticalMul');
+
+                let displayArgs = "";
+                if (isLCM || isGCD || isFactors || isDivisors) {
+                    displayArgs = extractArgsForDisplay(cleanStr);
+                }
+
+                const result = (runEuclidean || runVMul) ? null : math.evaluate(cleanStr);
+
+                if (runEuclidean) {
+                    let match = cleanStr.match(/euclidean\(([^,]+),([^)]+)\)/);
+                    if (!match) throw new Error("Invalid Format");
+                    let D = parseInt(match[1]);
+                    let d = parseInt(match[2]);
+                    
+                    let trueQuotient = Math.floor(D / d);
+                    let trueRemainder = D % d;
+                    let ldResult = generateLongDivision(D, d);
+                    let visualQuotient = parseInt(ldResult.quotient);
+                    let visualRemainder = ldResult.remainder;
+
+                    titleEl.innerText = "Ευκλείδια Διαίρεση";
+
+                    if (ldResult.error) {
+                        contentEl.innerHTML = `<span style="color:red">${ldResult.error}</span>`;
+                    } else if (visualQuotient !== trueQuotient || visualRemainder !== trueRemainder) {
+                        let identity = `<div style="text-align:center; font-size:22px; margin-bottom:10px;">
+                                        <span style="color:#0056b3; font-weight:bold;">${D}</span> = 
+                                        <span style="color:#333;">${d}</span> · 
+                                        <span style="color:#2e7d32; font-weight:bold;">${trueQuotient}</span> + 
+                                        <span style="color:#d32f2f; font-weight:bold;">${trueRemainder}</span>
+                                        </div>`;
+                        contentEl.innerHTML = `
+                            ${identity}
+                            <div style="color:red; font-weight:bold; text-align:center; margin-top:20px; border:2px solid red; padding:10px;">
+                                ΣΦΑΛΜΑ ΕΠΑΛΗΘΕΥΣΗΣ<br>
+                                <span style="font-size:16px; font-weight:normal;">Ο αλγόριθμος βημάτων απέτυχε τον έλεγχο ασφαλείας.<br>Εμφανίζεται μόνο η επαληθευμένη ταυτότητα.</span>
+                            </div>`;
+                    } else {
+                        let identity = `<div style="text-align:center; font-size:22px; margin-bottom:10px;">
+                                        <span style="color:var(--highlight-color); font-weight:bold;">${D}</span> = 
+                                        <span style="color:var(--text-main);">${d}</span> · 
+                                        <span style="color:var(--quotient-color); font-weight:bold;">${ldResult.quotient}</span> + 
+                                        <span style="color:var(--btn-clear-text); font-weight:bold;">${ldResult.remainder}</span>
+                                        <span style="color:green; font-size:18px; margin-left:10px;">✅</span>
+                                        </div>`;
+                        let rowsHTML = ldResult.steps.join("");
+                        let visual = `
+                            ${identity}
+                            <div class="long-div-container">
+                                <div class="ld-left-col">${rowsHTML}</div>
+                                <div class="ld-right-col">
+                                    <div class="ld-divisor">${d}</div>
+                                    <div class="ld-quotient">${ldResult.quotient}</div>
+                                </div>
+                            </div>
+                            <div style="text-align:center; margin-top:15px; font-size:16px; color:var(--text-muted);">
+                                Υπόλοιπο: <b>${ldResult.remainder}</b>
+                            </div>`;
+                        contentEl.innerHTML = visual;
+                    }
+                } else if (runVMul) {
+                    // Match with COMMA separator (since we replaced ; with , earlier)
+                    let match = cleanStr.match(/verticalMul\(([^,]+),([^)]+)\)/);
+                    if (!match) throw new Error("Invalid Format. Use semicolon ; to separate numbers.");
+                    let aStr = match[1];
+                    let bStr = match[2];
+                    
+                    if (isNaN(parseFloat(aStr)) || isNaN(parseFloat(bStr))) {
+                         contentEl.innerHTML = `<span style="color:red">Invalid Numbers</span>`;
+                    } else {
+                        let vmResult = generateGridMultiplication(parseFloat(aStr), parseFloat(bStr));
+                        titleEl.innerText = "Κάθετος Πολλαπλασιασμός";
+                        if (vmResult.error) {
+                            contentEl.innerHTML = `<span style="color:red">${vmResult.error}</span>`;
+                        } else {
+                            contentEl.innerHTML = vmResult.visual;
+                        }
+                    }
+
+                } else if (isLCM) {
+                    titleEl.innerText = `LCM(${displayArgs})`;
+                    contentEl.innerHTML = `<span class="value">${result}</span>`;
+                } else if (isGCD) {
+                    titleEl.innerText = `GCD(${displayArgs})`;
+                    contentEl.innerHTML = `<span class="value">${result}</span>`;
+                } else if (isFactors) {
+                    titleEl.innerText = `FACTORS(${displayArgs})`;
+                    let data = Array.isArray(result) ? result : (result._data || [result]);
+                    contentEl.innerHTML = `<span class="value">${formatPrimeFactors(data)}</span>`;
+                } else if (isDivisors) {
+                    titleEl.innerText = `DIVISORS(${displayArgs})`;
+                    let data = Array.isArray(result) ? result : (result._data || [result]);
+                    let tags = data.map(d => `<span class="divisor-tag">${d}</span>`).join(" ");
+                    contentEl.innerHTML = `<div class="divisors-list">${tags}</div>`;
+                } else {
+                    titleEl.innerText = "Result";
+                    displayNumericResult(result, contentEl, "", simpInfo);
+                    
+                    const f = math.fraction(result);
+                    if (f.d === 1) {
+                        lastAns = (f.s * f.n).toString();
+                    } else {
+                        let sign = f.s === -1 ? "-" : "";
+                        lastAns = sign + "\\frac{" + f.n + "}{" + f.d + "}";
+                    }
+                }
+            }
+
+            if (!isHistoryReplay) {
+                if (calcHistory.length === 0 || calcHistory[calcHistory.length - 1] !== latex) {
+                    calcHistory.push(latex);
+                    if(calcHistory.length > 20) calcHistory.shift();
+                    localStorage.setItem('calc_history', JSON.stringify(calcHistory));
+                }
+                historyIndex = -1;
+            }
+            currentDraft = "";
+
+        } catch (err) {
+            console.error(err);
+            titleEl.innerText = "ERROR";
+            contentEl.innerHTML = `<span style='color:red;'>Syntax Error.<br>Check equation or separators (;)</span>`;
+        }
+        mathField.focus();
+    }
+
+    function displayNumericResult(val, container, prefixStr, simpInfo = null) {
+        if (isNaN(val) || !isFinite(val)) {
+            container.innerHTML = "Not a Number"; return;
+        }
+        const frac = math.fraction(val);
+        const num = frac.n;
+        const den = frac.d;
+        const isNegative = (frac.s === -1);
+        const sign = isNegative ? "-" : "";
+        const absNum = num;
+        const absDen = den;
+
+        let prefixHTML = prefixStr ? `<span class="prefix">${prefixStr}</span>` : `<span class="prefix"></span>`;
+        let html = '<div style="display:flex; flex-direction:column; gap:0;">';
+
+        if (absDen === 1) {
+            let valStr = absNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            html += `
+                <div class="std-result-row" style="border:none;">
+                    <span class="label">Result:</span>
+                    ${prefixHTML}
+                    <span class="value">${sign}${valStr}</span>
+                </div>`;
+        } else {
+            let fracHTML = renderFraction(num, den, sign);
+            let infoHTML = simpInfo ? `<div class="simp-info">${simpInfo}</div>` : '';
+            
+            html += `
+                <div class="std-result-row">
+                    <span class="label">Fraction:</span>
+                    ${prefixHTML}
+                    <div style="display:flex; align-items:center;">${fracHTML}</div>
+                    ${infoHTML}
+                </div>`;
+
+            let mixedHTML = "-";
+            if (absNum > absDen) {
+                const whole = Math.floor(absNum / absDen);
+                const rem = absNum % absDen;
+                mixedHTML = `<span class="value">${sign}${whole} <div class="fraction-render"><span class="frac-top">${rem}</span><span class="frac-bottom">${absDen}</span></div></span>`;
+            } else {
+                mixedHTML = fracHTML; 
+            }
+            html += `
+                <div class="std-result-row">
+                    <span class="label">Mixed:</span>
+                    ${prefixHTML}
+                    ${mixedHTML}
+                </div>`;
+            
+            let dec = parseFloat(math.format(val, {notation: 'fixed', precision: 6})).toString().replace('.', ',');
+            let parts = dec.split(',');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            let decFormatted = parts.join(',');
+
+            html += `
+                <div class="std-result-row" style="border:none;">
+                    <span class="label">Decimal:</span>
+                    ${prefixHTML}
+                    <span class="value">${decFormatted}</span>
+                </div>`;
+        }
+        
+        html += '</div>';
+        container.innerHTML = html;
+    }
+    
+    document.getElementById('math-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            calculate();
+        }
+        else if (e.key === 'PageUp') {
+            if (calcHistory.length > 0) {
+                e.preventDefault();
+                if (historyIndex === -1) {
+                    currentDraft = mathField.latex(); 
+                    let currentLatex = mathField.latex();
+                    let lastHistory = calcHistory[calcHistory.length - 1];
+                    if (currentLatex === lastHistory) {
+                        historyIndex = calcHistory.length - 2;
+                    } else {
+                        historyIndex = calcHistory.length - 1;
+                    }
+                } else if (historyIndex > 0) {
+                    historyIndex--;
+                }
+
+                if (historyIndex < 0) historyIndex = 0;
+                mathField.latex(calcHistory[historyIndex]);
+                calculate(true); 
+                mathField.focus();
+            }
+        }
+        else if (e.key === 'PageDown') {
+            e.preventDefault();
+            if (historyIndex !== -1 && historyIndex < calcHistory.length - 1) {
+                historyIndex++;
+                mathField.latex(calcHistory[historyIndex]);
+                calculate(true);
+            } else {
+                historyIndex = -1;
+                mathField.latex(currentDraft); 
+                document.getElementById('results').style.display = 'none';
+            }
+            mathField.focus();
+        }
+    });
+</script>
+
+</body>
+</html>
