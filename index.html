@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calculator K6 - Final v44</title>
+    <title>Calculator K6 - Final v45</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css"/>
@@ -77,6 +77,14 @@
 
         * { box-sizing: border-box; }
         
+        /* --- ΒΕΛΤΙΩΣΗ ΓΙΑ ΤΟ SCROLL --- */
+        html, body {
+            overflow-x: hidden; /* Απαγορεύει το οριζόντιο σκρολ σε όλη τη σελίδα */
+            width: 100%;
+            touch-action: pan-y; /* Επιτρέπει μόνο κάθετη κύλιση με την αφή */
+            position: relative;
+        }
+
         body { 
             font-family: 'Segoe UI', sans-serif; 
             background-color: var(--bg-body); 
@@ -166,6 +174,8 @@
             display: none; cursor: default; 
             color: var(--text-main);
             position: relative; z-index: 1;
+            /* Αν το περιεχόμενο είναι τεράστιο, σκρολάρει μόνο το αποτέλεσμα, όχι όλη η σελίδα */
+            overflow-x: auto; 
         }
         
         .theory-title { 
@@ -291,7 +301,7 @@
     <div class="history-hint">History: PageUp / PageDown</div>
 
     <div class="keypad">
-        <button class="theory" onclick="insertTheory('E-DIV')" data-tooltip="Ευκλείδεια Διαίρεση (κάθετη). Παράδειγμα: E-DIV(245;7)">E-DIV</button>
+        <button class="theory" onclick="insertTheory('E-DIV')" data-tooltip="Ευκλείδια Διαίρεση (κάθετη). Παράδειγμα: E-DIV(245;7)">E-DIV</button>
         <button class="theory" onclick="insertTheory('V-MUL')" data-tooltip="Κάθετος Πολλαπλασιασμός. Παράδειγμα: V-MUL(12,5;8)">V-MUL</button>
         <button class="theory" onclick="insertTheory('LCM')" data-tooltip="Ελάχιστο Κοινό Πολλαπλάσιο (ΕΚΠ). Παράδειγμα: LCM(12;18)">LCM</button>
         <button class="theory" onclick="insertTheory('GCD')" data-tooltip="Μέγιστος Κοινός Διαιρέτης (ΜΚΔ). Παράδειγμα: GCD(24;36)">GCD</button>
@@ -337,7 +347,7 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v44</div>
+        <div class="modal-version">v45</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
@@ -376,28 +386,22 @@
         if (savedHistory) {
             try { calcHistory = JSON.parse(savedHistory); } catch (e) { calcHistory = []; }
         }
-        if(mathField) smartFocus(); // Use smartFocus instead of force focus on load
+        if(mathField) smartFocus(); 
     });
 
     // --- GLOBAL CLICK HANDLER (The "Traffic Cop") ---
     document.getElementById('calc-body').addEventListener('click', function(e) {
-        // If button or settings, ignore (handled elsewhere)
         if (e.target.tagName === 'BUTTON' || e.target.closest('.settings-toggle')) return;
         
-        // Logic for clicks on the calculator body
         if (window.innerWidth > 600) {
             mathField.focus();
         } else {
             // Mobile: 
-            // If clicked INSIDE the input, let the browser handle focus (keyboard opens)
             if (e.target.closest('#math-input')) {
-                // Let default behavior happen (keyboard opens)
-                // Scroll into view to ensure keyboard doesn't hide input
                 setTimeout(() => {
                     document.getElementById('math-input').scrollIntoView({behavior: 'smooth', block: 'center'});
                 }, 300);
             } else {
-                // Clicked outside (gray area), force blur to close keyboard
                 const hiddenArea = document.querySelector('#math-input textarea');
                 if (hiddenArea) hiddenArea.blur();
             }
@@ -846,7 +850,7 @@
                     let visualQuotient = parseInt(ldResult.quotient);
                     let visualRemainder = ldResult.remainder;
 
-                    titleEl.innerText = "Ευκλείδεια Διαίρεση";
+                    titleEl.innerText = "Ευκλείδια Διαίρεση";
 
                     if (ldResult.error) {
                         contentEl.innerHTML = `<span style="color:red">${ldResult.error}</span>`;
