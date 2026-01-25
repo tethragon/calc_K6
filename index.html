@@ -258,6 +258,14 @@
         button.theory:hover::after { opacity: 1; visibility: visible; bottom: 120%; }
 
         @media (max-width: 600px) {
+            /* ΝΕΟ: Αλλάζουμε τη συμπεριφορά του body στα κινητά */
+            body {
+                align-items: flex-start; /* Όχι πια center, για να μπορεί να ανέβει ψηλά */
+                padding-top: 20px;       /* Λίγος αέρας από πάνω */
+                padding-bottom: 50vh;    /* ΣΗΜΑΝΤΙΚΟ: Δίνουμε έξτρα χώρο κάτω (μισή οθόνη) για να σκρολάρει άνετα πάνω από το πληκτρολόγιο */
+                min-height: 100vh;
+            }
+
             .calculator { padding: 15px; }
             button { padding: 10px 0; font-size: 16px; }
             .keypad { gap: 5px; }
@@ -658,10 +666,7 @@
         handlers: { edit: function() {} }
     });
 
-    // --- ΝΕΑ ΠΡΟΣΘΗΚΗ ---
-    // Βρίσκει το κρυφό πεδίο του MathQuill και απαγορεύει το εικονικό πληκτρολόγιο
-    $('#math-input textarea').attr('inputmode', 'none');
-
+   
     $(document).ready(function() { mathField.focus(); });
     document.getElementById('calc-body').addEventListener('click', function(e) {
         if (e.target.tagName !== 'BUTTON' && !e.target.closest('.settings-toggle')) mathField.focus();
@@ -1061,6 +1066,15 @@
             mathField.focus();
         }
     });
+// Προσθήκη στο τέλος του script
+// Όταν ο χρήστης κάνει κλικ στο πεδίο, περίμενε λίγο να ανοίξει το πληκτρολόγιο
+// και μετά κύλησε την οθόνη ώστε το πεδίο να είναι ορατό.
+document.getElementById('math-input').addEventListener('click', function() {
+    setTimeout(() => {
+        this.scrollIntoView({behavior: 'smooth', block: 'center'});
+    }, 300); // 300ms καθυστέρηση για να προλάβει να ανοίξει το πληκτρολόγιο
+});
+
 </script>
 
 </body>
