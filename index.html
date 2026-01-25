@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calculator K6 - Final v45</title>
+    <title>Calculator K6 - Final v46</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css"/>
@@ -79,9 +79,9 @@
         
         /* --- ΒΕΛΤΙΩΣΗ ΓΙΑ ΤΟ SCROLL --- */
         html, body {
-            overflow-x: hidden; /* Απαγορεύει το οριζόντιο σκρολ σε όλη τη σελίδα */
+            overflow-x: hidden;
             width: 100%;
-            touch-action: pan-y; /* Επιτρέπει μόνο κάθετη κύλιση με την αφή */
+            touch-action: pan-y; 
             position: relative;
         }
 
@@ -174,7 +174,6 @@
             display: none; cursor: default; 
             color: var(--text-main);
             position: relative; z-index: 1;
-            /* Αν το περιεχόμενο είναι τεράστιο, σκρολάρει μόνο το αποτέλεσμα, όχι όλη η σελίδα */
             overflow-x: auto; 
         }
         
@@ -347,7 +346,7 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v45</div>
+        <div class="modal-version">v46</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
@@ -606,7 +605,8 @@
         for (let i = 0; i < digitsB.length; i++) {
             let digit = digitsB[i];
             let product = intA * digit;
-            let pDisplay = product.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            // Removed regex dots from partial products (User Request v46)
+            let pDisplay = product.toString();
             
             let cells = [];
             let cleanDigits = [];
