@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calculator K6 - v44</title>
+    <title>Calculator K6 - Final v44</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css"/>
@@ -76,6 +76,7 @@
         }
 
         * { box-sizing: border-box; }
+        
         body { 
             font-family: 'Segoe UI', sans-serif; 
             background-color: var(--bg-body); 
@@ -224,7 +225,7 @@
         }
         .modal-close:hover { background: var(--btn-action-hover); }
 
-        /* --- LONG DIVISION & VMUL Styles (Same as before) --- */
+        /* --- LONG DIVISION & VMUL Styles --- */
         .long-div-container { display: flex; justify-content: center; font-family: 'Consolas', 'Courier New', monospace; font-size: 24px; color: var(--text-main); line-height: 1.5; letter-spacing: 2px; }
         .ld-left-col { display: flex; flex-direction: column; align-items: flex-start; margin-right: 15px; position: relative; }
         .ld-row { white-space: pre; position: relative; margin-bottom: 2px; } 
@@ -257,15 +258,13 @@
         button.theory::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background-color: var(--bg-calc); color: var(--text-main); padding: 6px 10px; border-radius: 4px; font-size: 12px; white-space: nowrap; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid var(--border-color); z-index: 100; pointer-events: none; font-weight: normal; text-transform: none; letter-spacing: normal; text-align: center; }
         button.theory:hover::after { opacity: 1; visibility: visible; bottom: 120%; }
 
+        /* Responsive Fixes */
         @media (max-width: 600px) {
-            /* ΝΕΟ: Αλλάζουμε τη συμπεριφορά του body στα κινητά */
             body {
-                align-items: flex-start; /* Όχι πια center, για να μπορεί να ανέβει ψηλά */
-                padding-top: 20px;       /* Λίγος αέρας από πάνω */
-                padding-bottom: 50vh;    /* ΣΗΜΑΝΤΙΚΟ: Δίνουμε έξτρα χώρο κάτω (μισή οθόνη) για να σκρολάρει άνετα πάνω από το πληκτρολόγιο */
-                min-height: 100vh;
+                align-items: flex-start; 
+                padding-top: 20px;       
+                padding-bottom: 40vh; /* Extra space at bottom */
             }
-
             .calculator { padding: 15px; }
             button { padding: 10px 0; font-size: 16px; }
             .keypad { gap: 5px; }
@@ -338,7 +337,7 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v43 Beta</div>
+        <div class="modal-version">v44</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
@@ -356,6 +355,18 @@
 </div>
 
 <script>
+    // --- SMART FOCUS HELPER (Hybrid Keypad Logic) ---
+    function smartFocus() {
+        // If mobile, blur the hidden input to keep keyboard closed
+        if (window.innerWidth <= 600) {
+            const hiddenArea = document.querySelector('#math-input textarea');
+            if (hiddenArea) hiddenArea.blur();
+        } else {
+            // If desktop, focus to allow typing
+            mathField.focus();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('calc_theme') || 'light';
         document.body.setAttribute('data-theme', savedTheme);
@@ -365,7 +376,32 @@
         if (savedHistory) {
             try { calcHistory = JSON.parse(savedHistory); } catch (e) { calcHistory = []; }
         }
-        if(mathField) mathField.focus();
+        if(mathField) smartFocus(); // Use smartFocus instead of force focus on load
+    });
+
+    // --- GLOBAL CLICK HANDLER (The "Traffic Cop") ---
+    document.getElementById('calc-body').addEventListener('click', function(e) {
+        // If button or settings, ignore (handled elsewhere)
+        if (e.target.tagName === 'BUTTON' || e.target.closest('.settings-toggle')) return;
+        
+        // Logic for clicks on the calculator body
+        if (window.innerWidth > 600) {
+            mathField.focus();
+        } else {
+            // Mobile: 
+            // If clicked INSIDE the input, let the browser handle focus (keyboard opens)
+            if (e.target.closest('#math-input')) {
+                // Let default behavior happen (keyboard opens)
+                // Scroll into view to ensure keyboard doesn't hide input
+                setTimeout(() => {
+                    document.getElementById('math-input').scrollIntoView({behavior: 'smooth', block: 'center'});
+                }, 300);
+            } else {
+                // Clicked outside (gray area), force blur to close keyboard
+                const hiddenArea = document.querySelector('#math-input textarea');
+                if (hiddenArea) hiddenArea.blur();
+            }
+        }
     });
 
     // --- SETTINGS MODAL LOGIC ---
@@ -374,10 +410,8 @@
     }
 
     function closeSettings(e) {
-        // If 'e' is present, check if click was on overlay (background) not content
         if (e && e.target !== e.currentTarget) return;
         document.getElementById('settings-modal').classList.remove('active');
-        if(mathField) mathField.focus();
     }
 
     function toggleThemeInsideModal() {
@@ -520,17 +554,12 @@
         let digitsB = intB.toString().split('').map(Number).reverse();
         
         // Calculate Grid Width
-        // The width must accommodate the final result length + partial shifts
         let finalIntResult = (BigInt(intA) * BigInt(intB)).toString();
-        // Width estimation: max(lenA, lenB, finalLen) + extra for operator
         let cols = Math.max(displayA.replace(/[.,]/g,'').length, displayB.replace(/[.,]/g,'').length, finalIntResult.length) + 2; 
 
         // Helper to Create Row Cells
         function createRowCells(formattedStr, totalCols, isResult = false, prefix = null) {
             let cells = [];
-            // Remove marks for counting, but keep logic for ghost rendering
-            // We iterate string chars. If char is digit, it's a cell. 
-            // If char is '.' or ',', it attaches to previous cell.
             let cleanDigits = [];
             for (let i=0; i<formattedStr.length; i++) {
                 let char = formattedStr[i];
@@ -543,22 +572,11 @@
                 }
             }
 
-            // Fill empty cells on the left
-            let emptyCount = totalCols - cleanDigits.length;
-            // If we have a prefix (like operator), it goes in the cell BEFORE the first digit (or further left)
-            
-            // Layout: [Empty...][Prefix][Digits...]
-            // We align Right.
-            
             for(let k=0; k<totalCols; k++) {
-                // Determine what goes in this cell index (0 to totalCols-1)
-                // The digits occupy indices: [totalCols - len] to [totalCols - 1]
                 let digitIndex = k - (totalCols - cleanDigits.length);
-                
                 let cellContent = "";
                 let cellClass = isResult ? "grid-cell result-cell" : "grid-cell";
                 if (!isResult && prefix && k === (totalCols - cleanDigits.length - 1)) {
-                    // Place prefix just left of digits
                     cellContent = `<span class="grid-operator">${prefix}</span>`;
                 } else if (digitIndex >= 0) {
                     let d = cleanDigits[digitIndex];
@@ -567,7 +585,6 @@
                     if (d.mark === '.') ghost = '<span class="ghost-dot">.</span>';
                     cellContent = `${d.val}${ghost}`;
                 } else if (prefix && k===0 && (totalCols - cleanDigits.length - 1) < 0) {
-                     // Edge case if no space
                      cellContent = `<span class="grid-operator">${prefix}</span>`;
                 }
 
@@ -577,28 +594,15 @@
         }
 
         let gridHtml = `<div class="vmul-grid" style="grid-template-columns: repeat(${cols}, auto);">`;
-        
-        // Row 1: A
         gridHtml += createRowCells(displayA, cols);
-        // Row 2: Operator + B
         gridHtml += createRowCells(displayB, cols, false, "×");
-        // Border
         gridHtml += `<div class="grid-border"></div>`;
 
         // Partial Products
         for (let i = 0; i < digitsB.length; i++) {
             let digit = digitsB[i];
             let product = intA * digit;
-            // Add thousands dots to partial product (integer)
             let pDisplay = product.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            
-            // Visual Padding (shift left by i positions means we effectively append i zeros visually)
-            // But in our Grid Logic, "shift left" means the digits end at col (total - 1 - i)
-            // Wait, standard mult shifts LEFT. 
-            // 1st partial ends at last col.
-            // 2nd partial ends at last col - 1.
-            
-            // Let's adjust createRowCells to accept an "endOffset"
             
             let cells = [];
             let cleanDigits = [];
@@ -608,7 +612,7 @@
             }
             
             let effectiveLen = cleanDigits.length;
-            let endPos = cols - 1 - i; // Shift left by i
+            let endPos = cols - 1 - i; 
             let startPos = endPos - effectiveLen + 1;
             
             let prefix = (digitsB.length > 1 && i === digitsB.length - 1) ? "+" : "";
@@ -623,11 +627,9 @@
                         let ghost = (d.mark === '.') ? '<span class="ghost-dot">.</span>' : '';
                         cellContent = `${d.val}${ghost}`;
                     }
-                    
                     if (prefix && k === startPos - 1) {
                         cellContent = `<span class="grid-operator">${prefix}</span>`;
                     }
-                    
                     cells.push(`<div class="${cellClass}">${cellContent}</div>`);
                 }
                 gridHtml += cells.join("");
@@ -638,8 +640,6 @@
             gridHtml += `<div class="grid-border"></div>`;
         }
 
-        // Final Result
-        // Pad result string
         while (finalIntResult.length <= totalDecimals) {
             finalIntResult = "0" + finalIntResult;
         }
@@ -654,9 +654,7 @@
         
         let finalDisplay = formatStandard(rawResultStr);
         gridHtml += createRowCells(finalDisplay, cols, true);
-        
         gridHtml += `</div>`;
-        
         return { visual: gridHtml };
     }
 
@@ -666,28 +664,26 @@
         handlers: { edit: function() {} }
     });
 
-   
-    $(document).ready(function() { mathField.focus(); });
-    document.getElementById('calc-body').addEventListener('click', function(e) {
-        if (e.target.tagName !== 'BUTTON' && !e.target.closest('.settings-toggle')) mathField.focus();
+    $(document).ready(function() { 
+        smartFocus(); 
     });
 
     function writeCmd(cmd) {
         if (cmd === '/') mathField.cmd('\\frac');
         else mathField.cmd(cmd);
-        mathField.focus();
+        smartFocus();
     }
     
     function insertTheory(name) {
         mathField.write('\\text{' + name + '}\\left(\\right)');
         mathField.keystroke('Left'); 
-        mathField.focus();
+        smartFocus();
     }
     
     function insertAns() {
         if (lastAns === null) return;
         mathField.write(lastAns);
-        mathField.focus();
+        smartFocus();
     }
 
     function clearInput() {
@@ -695,7 +691,7 @@
         document.getElementById('results').style.display = 'none';
         historyIndex = -1;
         currentDraft = ""; 
-        mathField.focus();
+        smartFocus();
     }
 
     function formatPrimeFactors(factorsArray) {
@@ -767,7 +763,10 @@
 
     function calculate(isHistoryReplay = false) {
         let latex = mathField.latex();
-        if(!latex && !isHistoryReplay) { mathField.focus(); return; }
+        if(!latex && !isHistoryReplay) { 
+            smartFocus();
+            return; 
+        }
 
         let cleanStr = latex;
         if (lastAns !== null) cleanStr = cleanStr.replace(/\\text\{Ans\}/g, `(${lastAns})`);
@@ -788,12 +787,6 @@
             .replace(/\\div/g, "/")
             .replace(/\\cdot/g, "*").replace(/\\times/g, "*")
             .replace(/,/g, ".")
-            // Fix: handle semicolon specially for V-MUL arguments
-            // We temporarily replace semicolon with a placeholder if inside verticalMul?
-            // Or just ensure we parse verticalMul arguments carefully.
-            // Simplified: let's assume ; is used as argument separator in verticalMul
-            // but standard math.evaluate uses comma. We need to swap back if it's not vmul?
-            // Actually, mathjs handles comma as separator. We should replace ; with , for mathjs
             .replace(/;/g, ",") 
             .replace(/{/g, "(").replace(/}/g, ")")
             .replace(/\\/g, "");
@@ -956,7 +949,7 @@
             titleEl.innerText = "ERROR";
             contentEl.innerHTML = `<span style='color:red;'>Syntax Error.<br>Check equation or separators (;)</span>`;
         }
-        mathField.focus();
+        smartFocus();
     }
 
     function displayNumericResult(val, container, prefixStr, simpInfo = null) {
@@ -1049,7 +1042,7 @@
                 if (historyIndex < 0) historyIndex = 0;
                 mathField.latex(calcHistory[historyIndex]);
                 calculate(true); 
-                mathField.focus();
+                smartFocus();
             }
         }
         else if (e.key === 'PageDown') {
@@ -1063,18 +1056,9 @@
                 mathField.latex(currentDraft); 
                 document.getElementById('results').style.display = 'none';
             }
-            mathField.focus();
+            smartFocus();
         }
     });
-// Προσθήκη στο τέλος του script
-// Όταν ο χρήστης κάνει κλικ στο πεδίο, περίμενε λίγο να ανοίξει το πληκτρολόγιο
-// και μετά κύλησε την οθόνη ώστε το πεδίο να είναι ορατό.
-document.getElementById('math-input').addEventListener('click', function() {
-    setTimeout(() => {
-        this.scrollIntoView({behavior: 'smooth', block: 'center'});
-    }, 300); // 300ms καθυστέρηση για να προλάβει να ανοίξει το πληκτρολόγιο
-});
-
 </script>
 
 </body>
