@@ -291,7 +291,7 @@
     <div class="history-hint">History: PageUp / PageDown</div>
 
     <div class="keypad">
-        <button class="theory" onclick="insertTheory('E-DIV')" data-tooltip="Ευκλείδια Διαίρεση (κάθετη). Παράδειγμα: E-DIV(245;7)">E-DIV</button>
+        <button class="theory" onclick="insertTheory('E-DIV')" data-tooltip="Ευκλείδεια Διαίρεση (κάθετη). Παράδειγμα: E-DIV(245;7)">E-DIV</button>
         <button class="theory" onclick="insertTheory('V-MUL')" data-tooltip="Κάθετος Πολλαπλασιασμός. Παράδειγμα: V-MUL(12,5;8)">V-MUL</button>
         <button class="theory" onclick="insertTheory('LCM')" data-tooltip="Ελάχιστο Κοινό Πολλαπλάσιο (ΕΚΠ). Παράδειγμα: LCM(12;18)">LCM</button>
         <button class="theory" onclick="insertTheory('GCD')" data-tooltip="Μέγιστος Κοινός Διαιρέτης (ΜΚΔ). Παράδειγμα: GCD(24;36)">GCD</button>
@@ -846,7 +846,7 @@
                     let visualQuotient = parseInt(ldResult.quotient);
                     let visualRemainder = ldResult.remainder;
 
-                    titleEl.innerText = "Ευκλείδια Διαίρεση";
+                    titleEl.innerText = "Ευκλείδεια Διαίρεση";
 
                     if (ldResult.error) {
                         contentEl.innerHTML = `<span style="color:red">${ldResult.error}</span>`;
