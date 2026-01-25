@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calculator K6 - v43 (Modal Settings)</title>
+    <title>Calculator K6 - v44</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css"/>
@@ -657,6 +657,10 @@
         spaceBehavesLikeTab: true,
         handlers: { edit: function() {} }
     });
+
+    // --- ΝΕΑ ΠΡΟΣΘΗΚΗ ---
+    // Βρίσκει το κρυφό πεδίο του MathQuill και απαγορεύει το εικονικό πληκτρολόγιο
+    $('#math-input textarea').attr('inputmode', 'none');
 
     $(document).ready(function() { mathField.focus(); });
     document.getElementById('calc-body').addEventListener('click', function(e) {
