@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calculator K6 - v49 beta</title>
+    <title>Calculator K6 - v50 beta</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css"/>
@@ -159,8 +159,18 @@
         button.theory { background-color: var(--btn-theory-bg); color: var(--btn-theory-text); font-size: 14px; text-transform: uppercase; }
         button.algebra { background-color: var(--btn-alg-bg); color: var(--btn-alg-text); font-size: 18px; font-style: italic; font-family: 'Times New Roman', serif; }
         
-        button.action { background-color: var(--btn-action-bg); color: var(--btn-action-text); font-size: 20px; }
-        button.action:hover { background-color: var(--btn-action-hover); }
+        button.action { 
+            background-color: var(--btn-action-bg); 
+            color: var(--btn-action-text); 
+            font-size: 18px;           /* Λίγο πιο μικρό από τα νούμερα για να χωράει άνετα */
+            font-weight: 900;          /* Πολύ έντονο (Bold) */
+            font-family: 'Segoe UI', sans-serif; /* Καθαρή γραμματοσειρά */
+            letter-spacing: 1px;       /* Αραιά γράμματα για επαγγελματικό look */
+        }
+
+        button.action:hover { 
+            background-color: var(--btn-action-hover); 
+        }
         button.clear { background-color: var(--btn-clear-bg); color: var(--btn-clear-text); }
         button.ans { background-color: var(--btn-ans-bg); color: var(--btn-ans-text); font-weight: 900; }
 
@@ -334,7 +344,7 @@
         <button onclick="writeCmd('0')">0</button>
         <button onclick="writeCmd('.')">,</button>
         <button class="operator" onclick="writeCmd('/')">a/b</button>
-        <button class="action" onclick="calculate()">=</button>
+        <button class="action" onclick="calculate()">ENTER</button>
     </div>
 
     <div class="results-area" id="results">
@@ -346,7 +356,7 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v49 beta</div>
+        <div class="modal-version">v50 beta</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
