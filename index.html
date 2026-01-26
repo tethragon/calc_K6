@@ -723,14 +723,11 @@
     }
 
     function solveLinearEquation(eqStr) {
-        // FIX 1: Αναγνώριση Ελληνικών χαρακτήρων και επέκταση Regex
-        // Προσθέσαμε το \u0370-\u03FF (Ελληνικά) και \u1F00-\u1FFF (Πολυτονικά/Εκτεταμένα)
+        // 1. Καθαρισμός και Regex για Ελληνικά/Λατινικά
         const match = eqStr.match(/[a-zA-Z\u0370-\u03FF\u1F00-\u1FFF]/);
         const variable = match ? match[0] : 'x';
 
-        // FIX 2: Διόρθωση για το 0x (και γενικά number+variable)
-        // Μετατρέπει το "0x" σε "0*x" για να μην το βλέπει ως Hexadecimal
-        // Το '$1*$2' βάζει * ανάμεσα στο ψηφίο και το γράμμα.
+        // 2. Διόρθωση συντακτικού (π.χ. 0x -> 0*x, 2χ -> 2*χ)
         eqStr = eqStr.replace(/(\d)([a-zA-Z\u0370-\u03FF\u1F00-\u1FFF])/g, '$1*$2');
 
         const parts = eqStr.split('=');
@@ -739,12 +736,12 @@
         // Φτιάχνουμε την παράσταση: LHS - RHS = 0
         const expression = `(${parts[0]}) - (${parts[1]})`;
 
-        // Βοηθητική συνάρτηση για υπολογισμό τιμής
-        const tryEval = (val) => {
+        // Βοηθητική συνάρτηση: Υπολογίζει τιμή και πιάνει σφάλματα
+        const tryEval = (expr, val) => {
             try {
                 const scope = {}; 
                 scope[variable] = val;
-                const res = math.evaluate(expression, scope);
+                const res = math.evaluate(expr, scope);
                 if (!isFinite(res) || isNaN(res)) return null; 
                 return res;
             } catch (e) {
@@ -752,65 +749,82 @@
             }
         };
 
-        // Βήμα 1: Υπολογίζουμε στο x=0 και στο x=1
-        let valAt0 = tryEval(0);
-        let valAt1 = tryEval(1);
+        // Βοηθητική συνάρτηση: Ελέγχει αν μια έκφραση είναι ΓΡΑΜΜΙΚΗ (Ευθεία)
+        // Χρησιμοποιεί 3 σημεία: start, start+1, start+2
+        const checkLinearityAndSolve = (expr, startX) => {
+            let y1 = tryEval(expr, startX);
+            let y2 = tryEval(expr, startX + 1);
+            let y3 = tryEval(expr, startX + 2);
 
-        // --- ΠΕΡΙΠΤΩΣΗ 1: Το x στον παρονομαστή (π.χ. 48/x = 24) ---
-        if (valAt0 === null) {
-            const rationalExpr = `(${expression}) * ${variable}`;
-            const scope1 = {}; scope1[variable] = 1;
-            const scope2 = {}; scope2[variable] = 2;
-            
-            try {
-                const y1 = math.evaluate(rationalExpr, scope1); 
-                const y2 = math.evaluate(rationalExpr, scope2);
+            if (y1 === null || y2 === null || y3 === null) return null; // Κάποιο σημείο απέτυχε
 
-                if (!isFinite(y1) || !isFinite(y2)) return "Error";
+            // Υπολογισμός Κλίσης (Slope)
+            // Η κλίση μεταξύ 1ου και 2ου σημείου
+            let slope1 = y2 - y1;
+            // Η κλίση μεταξύ 2ου και 3ου σημείου
+            let slope2 = y3 - y2;
 
-                const a_term_R = y2 - y1;
-                const b_term_R = y1 - a_term_R;
-                
-                if (math.abs(a_term_R) < 1e-10) return "Impossible (Αδύνατη)";
-                
-                let result = -b_term_R / a_term_R;
-
-                // --- FIX 3 (Λύση 1): Έλεγχος Ασφαλείας ---
-                // Αν είχαμε παρονομαστή και το αποτέλεσμα τείνει στο 0, είναι ύποπτο.
-                // Ελέγχουμε αν είναι εξαιρετικά μικρό (π.χ. < 0.000000001)
-                if (math.abs(result) < 1e-9) {
-                    return "Εκτός ορίων (Τείνει στο 0)";
-                }
-
-                return { val: result, variable: variable };
-                
-            } catch (e) {
-                return "Error in solving";
+            // Αν οι κλίσεις διαφέρουν, ΔΕΝ είναι ευθεία (είναι καμπύλη)
+            if (Math.abs(slope1 - slope2) > 1e-7) {
+                return "NonLinear"; 
             }
+
+            // Είναι ευθεία: y = ax + b
+            // a = slope1
+            // b = y1 - a * startX
+            let a = slope1;
+            let b = y1 - (a * startX);
+
+            // Έλεγχος για Αδύνατη / Ταυτότητα
+            if (math.abs(a) < 1e-10) {
+                if (math.abs(b) < 1e-10) return "Identity (Ταυτότητα)";
+                else return "Impossible (Αδύνατη)";
+            }
+
+            return -b / a;
+        };
+
+        // --- ΒΗΜΑ 1: Δοκιμή ως απλή γραμμική εξίσωση ---
+        // Ελέγχουμε στα σημεία 0, 1, 2
+        // Αν το x=0 αποτύχει (null), σημαίνει παρονομαστής -> Πάμε στο Βήμα 2
+        let resStandard = checkLinearityAndSolve(expression, 0);
+        
+        if (resStandard === "NonLinear") return "Η εξίσωση δεν είναι γραμμική";
+        if (typeof resStandard === 'number') {
+             // Επιστροφή αποτελέσματος (δεν χρειάζεται έλεγχος 0 εδώ γιατί το x=0 δούλεψε)
+             return { val: resStandard, variable: variable };
         }
+        if (typeof resStandard === 'string') return resStandard; // Identity/Impossible
 
-        // --- ΠΕΡΙΠΤΩΣΗ 2: Κανονική Γραμμική Εξίσωση ---
-        if (valAt1 === null) return "Error in solving";
+        // --- ΒΗΜΑ 2: Περίπτωση Παρονομαστή (Rational) ---
+        // Αν φτάσαμε εδώ, το x=0 ή x=1 κλπ "έσκασε" ή κάτι πήγε στραβά με τον απλό έλεγχο.
+        // Κυρίως μας νοιάζει αν το tryEval(0) έβγαλε null.
+        
+        if (tryEval(expression, 0) === null) {
+            // Πολλαπλασιάζουμε με τον άγνωστο: (expr) * x
+            const rationalExpr = `(${expression}) * ${variable}`;
+            
+            // Κάνουμε ΑΥΣΤΗΡΟ έλεγχο γραμμικότητας στη ΝΕΑ εξίσωση
+            // Χρησιμοποιούμε τα σημεία 1, 2, 3 (αποφεύγουμε το 0)
+            let resRational = checkLinearityAndSolve(rationalExpr, 1);
 
-        const b_term = valAt0;
-        const a_term = valAt1 - b_term;
-
-        // Έλεγχος Ταυτότητας / Αδύνατης (Πλέον πιάνει σωστά το 0x=0)
-        if (math.abs(a_term) < 1e-10) {
-            if (math.abs(b_term) < 1e-10) return "Identity (Ταυτότητα)";
-            else return "Impossible (Αδύνατη)";
-        }
-
-        // Έλεγχος Γραμμικότητας (για να πιάσουμε το x^2)
-        let valAt2 = tryEval(2);
-        if (valAt2 !== null) {
-            let predicted = (2 * valAt1) - valAt0;
-            if (Math.abs(predicted - valAt2) > 1e-9) {
+            if (resRational === "NonLinear") {
+                // ΕΔΩ πιάνουμε το 23x + 12/x = 125 (γιατί γίνεται 23x^2... που είναι καμπύλη)
                 return "Η εξίσωση δεν είναι γραμμική";
             }
+            
+            if (typeof resRational === 'number') {
+                // Λύση 1 (Safety Check): Αν τείνει στο 0 ενώ είχαμε παρονομαστή
+                if (math.abs(resRational) < 1e-9) {
+                    return "Εκτός ορίων (Τείνει στο 0)";
+                }
+                return { val: resRational, variable: variable };
+            }
+
+            if (typeof resRational === 'string') return resRational;
         }
 
-        return { val: -b_term / a_term, variable: variable };
+        return "Error in solving";
     }
 
     function parseLatexFractions(str) {
