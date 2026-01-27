@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calculator K6 - v52 beta</title>
+    <title>Calculator K6 - v53 beta</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css"/>
@@ -356,7 +356,7 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v52 beta</div>
+        <div class="modal-version">v53 beta</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
@@ -722,21 +722,21 @@
         return `<span class="value">${sign}<div class="fraction-render"><span class="frac-top">${Math.abs(num)}</span><span class="frac-bottom">${Math.abs(den)}</span></div></span>`;
     }
 
+    // --- FINAL: Επίλυση με Έλεγχο Γραμμικότητας (Χωρίς Επαλήθευση) ---
     function solveLinearEquation(eqStr) {
-        // 1. Καθαρισμός και Regex για Ελληνικά/Λατινικά
+        // 1. Regex για Ελληνικά/Λατινικά
         const match = eqStr.match(/[a-zA-Z\u0370-\u03FF\u1F00-\u1FFF]/);
         const variable = match ? match[0] : 'x';
 
-        // 2. Διόρθωση συντακτικού (π.χ. 0x -> 0*x, 2χ -> 2*χ)
+        // 2. Διόρθωση 0x -> 0*x
         eqStr = eqStr.replace(/(\d)([a-zA-Z\u0370-\u03FF\u1F00-\u1FFF])/g, '$1*$2');
 
         const parts = eqStr.split('=');
         if (parts.length !== 2) throw new Error("Invalid Equation");
         
-        // Φτιάχνουμε την παράσταση: LHS - RHS = 0
         const expression = `(${parts[0]}) - (${parts[1]})`;
 
-        // Βοηθητική συνάρτηση: Υπολογίζει τιμή και πιάνει σφάλματα
+        // Helper: Υπολογισμός τιμής
         const tryEval = (expr, val) => {
             try {
                 const scope = {}; 
@@ -749,33 +749,25 @@
             }
         };
 
-        // Βοηθητική συνάρτηση: Ελέγχει αν μια έκφραση είναι ΓΡΑΜΜΙΚΗ (Ευθεία)
-        // Χρησιμοποιεί 3 σημεία: start, start+1, start+2
+        // Helper: Έλεγχος Γραμμικότητας (3 σημεία) και Επίλυση
         const checkLinearityAndSolve = (expr, startX) => {
             let y1 = tryEval(expr, startX);
             let y2 = tryEval(expr, startX + 1);
             let y3 = tryEval(expr, startX + 2);
 
-            if (y1 === null || y2 === null || y3 === null) return null; // Κάποιο σημείο απέτυχε
+            if (y1 === null || y2 === null || y3 === null) return null; 
 
-            // Υπολογισμός Κλίσης (Slope)
-            // Η κλίση μεταξύ 1ου και 2ου σημείου
             let slope1 = y2 - y1;
-            // Η κλίση μεταξύ 2ου και 3ου σημείου
             let slope2 = y3 - y2;
 
-            // Αν οι κλίσεις διαφέρουν, ΔΕΝ είναι ευθεία (είναι καμπύλη)
+            // Αν η κλίση αλλάζει, είναι καμπύλη (μη γραμμική)
             if (Math.abs(slope1 - slope2) > 1e-7) {
                 return "NonLinear"; 
             }
 
-            // Είναι ευθεία: y = ax + b
-            // a = slope1
-            // b = y1 - a * startX
             let a = slope1;
             let b = y1 - (a * startX);
 
-            // Έλεγχος για Αδύνατη / Ταυτότητα
             if (math.abs(a) < 1e-10) {
                 if (math.abs(b) < 1e-10) return "Identity (Ταυτότητα)";
                 else return "Impossible (Αδύνατη)";
@@ -784,40 +776,22 @@
             return -b / a;
         };
 
-        // --- ΒΗΜΑ 1: Δοκιμή ως απλή γραμμική εξίσωση ---
-        // Ελέγχουμε στα σημεία 0, 1, 2
-        // Αν το x=0 αποτύχει (null), σημαίνει παρονομαστής -> Πάμε στο Βήμα 2
+        // --- ΒΗΜΑ 1: Δοκιμή ως απλή γραμμική ---
         let resStandard = checkLinearityAndSolve(expression, 0);
         
         if (resStandard === "NonLinear") return "Η εξίσωση δεν είναι γραμμική";
-        if (typeof resStandard === 'number') {
-             // Επιστροφή αποτελέσματος (δεν χρειάζεται έλεγχος 0 εδώ γιατί το x=0 δούλεψε)
-             return { val: resStandard, variable: variable };
-        }
-        if (typeof resStandard === 'string') return resStandard; // Identity/Impossible
+        if (typeof resStandard === 'number') return { val: resStandard, variable: variable };
+        if (typeof resStandard === 'string') return resStandard; 
 
-        // --- ΒΗΜΑ 2: Περίπτωση Παρονομαστή (Rational) ---
-        // Αν φτάσαμε εδώ, το x=0 ή x=1 κλπ "έσκασε" ή κάτι πήγε στραβά με τον απλό έλεγχο.
-        // Κυρίως μας νοιάζει αν το tryEval(0) έβγαλε null.
-        
+        // --- ΒΗΜΑ 2: Περίπτωση Παρονομαστή ---
         if (tryEval(expression, 0) === null) {
-            // Πολλαπλασιάζουμε με τον άγνωστο: (expr) * x
             const rationalExpr = `(${expression}) * ${variable}`;
-            
-            // Κάνουμε ΑΥΣΤΗΡΟ έλεγχο γραμμικότητας στη ΝΕΑ εξίσωση
-            // Χρησιμοποιούμε τα σημεία 1, 2, 3 (αποφεύγουμε το 0)
             let resRational = checkLinearityAndSolve(rationalExpr, 1);
 
-            if (resRational === "NonLinear") {
-                // ΕΔΩ πιάνουμε το 23x + 12/x = 125 (γιατί γίνεται 23x^2... που είναι καμπύλη)
-                return "Η εξίσωση δεν είναι γραμμική";
-            }
+            if (resRational === "NonLinear") return "Η εξίσωση δεν είναι γραμμική";
             
             if (typeof resRational === 'number') {
-                // Λύση 1 (Safety Check): Αν τείνει στο 0 ενώ είχαμε παρονομαστή
-                if (math.abs(resRational) < 1e-9) {
-                    return "Εκτός ορίων (Τείνει στο 0)";
-                }
+                if (math.abs(resRational) < 1e-9) return "Εκτός ορίων (Τείνει στο 0)";
                 return { val: resRational, variable: variable };
             }
 
@@ -827,6 +801,7 @@
         return "Error in solving";
     }
 
+    // --- FINAL FIX: Διόρθωση Parsing Κλασμάτων (για σωστή σειρά πράξεων) ---
     function parseLatexFractions(str) {
         while (str.indexOf('\\frac') !== -1) {
             let i = str.indexOf('\\frac');
@@ -836,7 +811,11 @@
             let startDen = str.indexOf('{', endNum);
             if (startDen === -1) break;
             let [den, endDen] = extractBalancedBlock(str, startDen);
-            let replacement = `(${num})/(${den})`;
+            
+            // Η αλλαγή: Διπλές παρενθέσεις ( (...) / (...) )
+            // Εξασφαλίζει ότι το αποτέλεσμα της διαίρεσης αντιμετωπίζεται ως ενιαίος αριθμός
+            let replacement = `((${num})/(${den}))`;
+            
             str = str.substring(0, i) + replacement + str.substring(endDen);
         }
         return str;
