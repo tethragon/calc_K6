@@ -1037,12 +1037,20 @@
             contentEl.innerHTML = `<span style='color:red;'>Syntax Error.<br>Check equation or separators (;)</span>`;
         }
         smartFocus();
-        // --- FIX: Auto-scroll to results ---
-        // Δίνουμε 100ms καθυστέρηση για να προλάβει ο browser να "ζωγραφίσει" το αποτέλεσμα
-        // και μετά κάνουμε smooth scroll ώστε να φανεί το πλαίσιο αποτελεσμάτων.
+        // --- FIXED SCROLL LOGIC ---
+        // Δίνουμε 400ms χρόνο για να ολοκληρωθεί το κλείσιμο του πληκτρολογίου
         setTimeout(() => {
-            resultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 100);
+            // Προσπάθεια 1: ScrollIntoView με "center" για να είναι σίγουρα ορατό
+            resultsEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Προσπάθεια 2 (Backup): Αν το παραπάνω δεν δουλέψει καλά σε iframes,
+            // κάνουμε manual scroll στο τέλος της σελίδας
+            const yOffset = resultsEl.getBoundingClientRect().top + window.pageYOffset - 50; 
+            // Ελέγχουμε αν χρειάζεται επιπλέον scroll
+            if(window.innerHeight + window.scrollY < document.body.offsetHeight - 100) {
+                 window.scrollTo({top: yOffset, behavior: 'smooth'});
+            }
+        }, 400);
     }
 
     function displayNumericResult(val, container, prefixStr, simpInfo = null) {
