@@ -1036,13 +1036,13 @@
             titleEl.innerText = "ERROR";
             contentEl.innerHTML = `<span style='color:red;'>Syntax Error.<br>Check equation or separators (;)</span>`;
         }
+        smartFocus();
         // --- FIX: Auto-scroll to results ---
         // Δίνουμε 100ms καθυστέρηση για να προλάβει ο browser να "ζωγραφίσει" το αποτέλεσμα
         // και μετά κάνουμε smooth scroll ώστε να φανεί το πλαίσιο αποτελεσμάτων.
         setTimeout(() => {
             resultsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 100);
-        smartFocus();
     }
 
     function displayNumericResult(val, container, prefixStr, simpInfo = null) {
