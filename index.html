@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calculator K6 - v54 beta</title>
+    <title>Calculator K6</title>
+    <meta name="description" content="Scientific & Educational Calculator with vertical arithmetic algorithms and linear algebra." />
+    <meta property="og:title" content="Calculator K6" />
+    <meta property="og:description" content="Scientific & Educational Calculator with vertical arithmetic algorithms and linear algebra." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         :root {
@@ -41,6 +47,11 @@
             --highlight-color: #0056b3;
             --modal-overlay: rgba(0, 0, 0, 0.5);
             --modal-bg: #ffffff;
+            --banner-bg: #fff8e1;
+            --banner-border: #ffb300;
+            --banner-text: #795548;
+            --card-bg: #f5f8fa;
+            --card-border: #e1e8ed;
         }
 
         [data-theme="dark"] {
@@ -73,6 +84,11 @@
             --highlight-color: #64b5f6;
             --modal-overlay: rgba(0, 0, 0, 0.7);
             --modal-bg: #2d2d2d;
+            --banner-bg: #2e2612;
+            --banner-border: #ffb300;
+            --banner-text: #ffe082;
+            --card-bg: #2a2a2a;
+            --card-border: #3d3d3d;
         }
 
         * { box-sizing: border-box; }
@@ -85,7 +101,7 @@
         }
 
         body { 
-            font-family: 'Segoe UI', sans-serif; 
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; 
             background-color: var(--bg-body); 
             color: var(--text-main);
             display: flex; justify-content: center; align-items: center; 
@@ -122,6 +138,7 @@
             color: var(--text-main); 
             margin-top: 0; 
             margin-bottom: 20px; 
+            letter-spacing: 0.5px;
         }
 
         #math-input { 
@@ -162,10 +179,10 @@
         button.action { 
             background-color: var(--btn-action-bg); 
             color: var(--btn-action-text); 
-            font-size: 18px;           /* Λίγο πιο μικρό από τα νούμερα για να χωράει άνετα */
-            font-weight: 900;          /* Πολύ έντονο (Bold) */
-            font-family: 'Segoe UI', sans-serif; /* Καθαρή γραμματοσειρά */
-            letter-spacing: 1px;       /* Αραιά γράμματα για επαγγελματικό look */
+            font-size: 18px;
+            font-weight: 900;
+            font-family: 'Segoe UI', sans-serif;
+            letter-spacing: 1px;
         }
 
         button.action:hover { 
@@ -187,10 +204,10 @@
         
         .theory-title { 
             font-size: 16px; color: var(--text-muted); 
-            margin-bottom: 10px; text-transform: uppercase; 
+            margin-bottom: 12px; text-transform: uppercase; 
             font-weight: bold; text-align: center; 
             border-bottom: 1px solid var(--border-color); 
-            padding-bottom: 5px; 
+            padding-bottom: 6px; 
         }
         
         /* --- MODAL STYLES --- */
@@ -207,12 +224,14 @@
         .modal-content {
             background-color: var(--modal-bg);
             color: var(--text-main);
-            width: 90%; max-width: 350px;
+            width: 90%; max-width: 420px;
             padding: 25px; border-radius: 15px;
             box-shadow: 0 15px 40px rgba(0,0,0,0.3);
             text-align: center;
             transform: scale(0.9); transition: transform 0.3s;
             border: 1px solid var(--border-color);
+            max-height: 85vh;
+            overflow-y: auto;
         }
         .modal-overlay.active .modal-content { transform: scale(1); }
         
@@ -243,14 +262,210 @@
         .modal-close:hover { background: var(--btn-action-hover); }
 
         /* --- LONG DIVISION & VMUL Styles --- */
-        .long-div-container { display: flex; justify-content: center; font-family: 'Consolas', 'Courier New', monospace; font-size: 24px; color: var(--text-main); line-height: 1.5; letter-spacing: 2px; }
+        .long-div-container { 
+            display: flex; justify-content: center; 
+            font-family: 'Consolas', 'Courier New', monospace; 
+            font-size: 24px; color: var(--text-main); 
+            line-height: 1.5; letter-spacing: 1px; 
+            margin: 15px 0;
+        }
         .ld-left-col { display: flex; flex-direction: column; align-items: flex-start; margin-right: 15px; position: relative; }
+        .ld-grid-row { display: flex; position: relative; height: 1.5em; align-items: center; margin-bottom: 2px; }
+        .ld-cell { width: 1.5ch; text-align: center; position: relative; height: 1.5em; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+        .ld-cell .ghost-comma { position: absolute; bottom: 2px; right: -0.35ch; font-weight: bold; color: inherit; pointer-events: none; line-height: 1; }
+        .ld-subtrahend-cell { border-bottom: 2px solid var(--line-color); }
         .ld-row { white-space: pre; position: relative; margin-bottom: 2px; } 
-        .ld-minus { position: absolute; left: -15px; font-weight: bold; color: var(--text-main); }
+        .ld-minus { position: absolute; left: -14px; font-weight: bold; color: var(--text-main); }
         .ld-subtrahend { border-bottom: 2px solid var(--line-color); display: inline-block; padding-bottom: 2px; margin-bottom: 3px; }
-        .ld-right-col { border-left: 3px solid var(--line-color); padding-left: 10px; display: flex; flex-direction: column; }
+        .ld-right-col { border-left: 3px solid var(--line-color); padding-left: 12px; display: flex; flex-direction: column; }
         .ld-divisor { border-bottom: 3px solid var(--line-color); padding-bottom: 5px; margin-bottom: 5px; font-weight: bold; }
-        .ld-quotient { color: var(--quotient-color); font-weight: bold; font-size: 28px; letter-spacing: 2px; }
+        .ld-quotient { color: var(--quotient-color); font-weight: bold; font-size: 28px; }
+        .ld-q-container { display: inline-flex; align-items: center; letter-spacing: 0; }
+        .ld-q-cell { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1.3ch; text-align: center; }
+        .ld-q-cell .ghost-comma { position: absolute; bottom: 2px; right: -0.35ch; font-weight: bold; color: inherit; pointer-events: none; line-height: 1; }
+
+        /* --- ACTION BAR & PRINTABLE CARD & TOAST --- */
+        .calc-action-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+        .btn-copy-img {
+            background: var(--btn-base-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 7px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .btn-copy-img:hover {
+            background: var(--btn-op-bg);
+            border-color: var(--highlight-color);
+            color: var(--highlight-color);
+            transform: translateY(-1px);
+        }
+        .btn-copy-img:active {
+            transform: scale(0.96);
+        }
+        .btn-copy-img.btn-copy-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-color: #a5d6a7;
+        }
+        .printable-calc-card {
+            background: var(--bg-calc);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            margin: 8px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            position: relative;
+        }
+        .toast-notice {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%) translateY(70px);
+            background: #323232;
+            color: #ffffff;
+            padding: 10px 22px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+            z-index: 99999;
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s ease;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast-notice.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* --- DECIMAL DIVISION ENHANCEMENTS --- */
+        .shift-banner {
+            background-color: var(--banner-bg);
+            border: 1px solid var(--banner-border);
+            color: var(--banner-text);
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: left;
+            line-height: 1.4;
+        }
+        .shift-title {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+            font-size: 15px;
+        }
+        .shift-formula {
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .shift-arrow { color: #f57c00; font-size: 18px; }
+        .shift-highlight { color: var(--highlight-color); }
+
+        .identity-line {
+            text-align: center;
+            font-size: 22px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .badge {
+            font-size: 13px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: normal;
+            vertical-align: middle;
+        }
+        .badge-exact { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .badge-approx { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+
+        /* Pedagogical Accordion */
+        .pedagogical-container {
+            margin-top: 18px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+        .pedagogical-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .pedagogical-toggle:hover { background: var(--btn-base-hover); }
+        .pedagogical-content {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .ped-step-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .ped-step-badge {
+            display: inline-block;
+            background: var(--btn-op-bg);
+            color: var(--btn-op-text);
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .ped-step-item { margin: 4px 0; }
+        .ped-step-detail {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed var(--border-color);
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
 
         .vmul-grid { display: grid; justify-content: center; font-family: 'Consolas', 'Courier New', monospace; font-size: 24px; color: var(--text-main); column-gap: 0.1ch; row-gap: 2px; width: fit-content; margin: 0 auto; }
         .grid-cell { width: 1.5ch; text-align: center; position: relative; height: 1.5em; display: flex; align-items: center; justify-content: center; }
@@ -280,7 +495,7 @@
             body {
                 align-items: flex-start; 
                 padding-top: 20px;       
-                padding-bottom: 40vh; /* Extra space at bottom */
+                padding-bottom: 40vh;
             }
             .calculator { padding: 15px; }
             button { padding: 10px 0; font-size: 16px; }
@@ -308,9 +523,11 @@
     <div class="history-hint">History: PageUp / PageDown</div>
 
     <div class="keypad">
-        <div></div> <div></div> <div></div> <div></div> <button class="theory" onclick="insertTheory('DIVs')" data-tooltip="Όλοι οι Διαιρέτες. Παράδειγμα: DIVs(12)">DIVs</button>
+        <button class="theory" onclick="insertTheory('D-DIV')" data-tooltip="Δεκαδική Κάθετη Διαίρεση. Παράδειγμα: D-DIV(14;4) ή D-DIV(12,5;0,4)">D-DIV</button>
+        <div></div> <div></div> <div></div>
+        <button class="theory" onclick="insertTheory('DIVs')" data-tooltip="Όλοι οι Διαιρέτες. Παράδειγμα: DIVs(12)">DIVs</button>
 
-        <button class="theory" onclick="insertTheory('E-DIV')" data-tooltip="Ευκλείδεια Διαίρεση (κάθετη). Παράδειγμα: E-DIV(245;7)">E-DIV</button>
+        <button class="theory" onclick="insertTheory('E-DIV')" data-tooltip="Ευκλείδεια Διαίρεση (ακέραιη). Παράδειγμα: E-DIV(245;7)">E-DIV</button>
         <button class="theory" onclick="insertTheory('V-MUL')" data-tooltip="Κάθετος Πολλαπλασιασμός. Παράδειγμα: V-MUL(12,5;8)">V-MUL</button>
         <button class="theory" onclick="insertTheory('LCM')" data-tooltip="Ελάχιστο Κοινό Πολλαπλάσιο (ΕΚΠ). Παράδειγμα: LCM(12;18)">LCM</button>
         <button class="theory" onclick="insertTheory('GCD')" data-tooltip="Μέγιστος Κοινός Διαιρέτης (ΜΚΔ). Παράδειγμα: GCD(24;36)">GCD</button>
@@ -320,7 +537,7 @@
         <button onclick="writeCmd('(')">(</button>
         <button onclick="writeCmd(')')">)</button>
         <button class="operator" onclick="writeCmd('^')">xʸ</button>
-        <button class="operator" onclick="writeCmd(':')">:</button>
+        <button class="operator" onclick="writeCmd('\\div')">÷</button>
 
         <button onclick="writeCmd('7')">7</button>
         <button onclick="writeCmd('8')">8</button>
@@ -353,10 +570,11 @@
     </div>
 </div>
 
+<!-- SETTINGS MODAL -->
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v54 beta</div>
+        <div class="modal-version">v0.59 beta</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
@@ -374,13 +592,27 @@
 </div>
 
 <script>
-    // --- SMART FOCUS HELPER (Hybrid Keypad Logic) ---
+    // --- SMART FOCUS & KEYBOARD HELPER ---
+    function focusCalculatorInput() {
+        window.focus();
+        if (window.mathField) {
+            mathField.focus();
+            const hiddenArea = document.querySelector('#math-input textarea');
+            if (hiddenArea) {
+                hiddenArea.focus({ preventScroll: true });
+            }
+        }
+    }
+
     function smartFocus() {
-        if (window.innerWidth <= 600) {
+        // Ελέγχουμε αν είναι πραγματικό smartphone/tablet (αφή) για αποφυγή ανεπιθύμητου OS πληκτρολογίου
+        const isTrueMobileTouch = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+        if (isTrueMobileTouch) {
             const hiddenArea = document.querySelector('#math-input textarea');
             if (hiddenArea) hiddenArea.blur();
         } else {
-            mathField.focus();
+            // Σε Desktop και στο Preview iframe, επιτρέπουμε ΠΑΝΤΑ την πληκτρολόγηση από φυσικό πληκτρολόγιο
+            focusCalculatorInput();
         }
     }
 
@@ -393,26 +625,31 @@
         if (savedHistory) {
             try { calcHistory = JSON.parse(savedHistory); } catch (e) { calcHistory = []; }
         }
-        if(mathField) smartFocus(); 
+        setTimeout(smartFocus, 100); 
+    });
+
+    // Αυτόματη εστίαση όταν το παράθυρο/iframe λαμβάνει focus
+    window.addEventListener('focus', () => {
+        const isTrueMobileTouch = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+        if (!isTrueMobileTouch) focusCalculatorInput();
     });
 
     // --- GLOBAL CLICK HANDLER ---
     document.getElementById('calc-body').addEventListener('click', function(e) {
         if (e.target.tagName === 'BUTTON' || e.target.closest('.settings-toggle')) return;
         
-        if (window.innerWidth > 600) {
-            mathField.focus();
-        } else {
-            // Mobile: 
-            if (e.target.closest('#math-input')) {
-                setTimeout(() => {
-                    document.getElementById('math-input').scrollIntoView({behavior: 'smooth', block: 'center'});
-                }, 300);
-            } else {
-                const hiddenArea = document.querySelector('#math-input textarea');
-                if (hiddenArea) hiddenArea.blur();
-            }
+        const isTrueMobileTouch = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+        if (!isTrueMobileTouch || e.target.closest('#math-input')) {
+            focusCalculatorInput();
         }
+    });
+
+    // Άμεση εστίαση στο πεδίο με κλικ/άγγιγμα
+    document.getElementById('math-input').addEventListener('click', function() {
+        focusCalculatorInput();
+    });
+    document.getElementById('math-input').addEventListener('mousedown', function() {
+        focusCalculatorInput();
     });
 
     // --- SETTINGS MODAL LOGIC ---
@@ -450,6 +687,7 @@
     let historyIndex = -1;
     let currentDraft = "";
     let lastAns = null; 
+    let justCalculated = false; 
 
     math.import({
         allDivisors: function(n) {
@@ -479,7 +717,668 @@
         }
     });
 
-    // --- LONG DIVISION (E-DIV) ---
+    // =========================================================================
+    // --- ΠΑΙΔΑΓΩΓΙΚΟΣ ΑΛΓΟΡΙΘΜΟΣ ΔΕΚΑΔΙΚΗΣ ΚΑΘΕΤΗΣ ΔΙΑΙΡΕΣΗΣ (ΣΤ' ΔΗΜΟΤΙΚΟΥ) ---
+    // =========================================================================
+
+    function validateAndNormalizeNumber(rawInput, fieldName = 'αριθμός') {
+        if (!rawInput || typeof rawInput !== 'string') {
+            return { isValid: false, normalized: '', numValue: 0, error: `Παρακαλώ συμπληρώστε το πεδίο (${fieldName}).` };
+        }
+        const trimmed = rawInput.trim().replace(/\s+/g, '');
+        if (!trimmed) {
+            return { isValid: false, normalized: '', numValue: 0, error: `Το πεδίο (${fieldName}) δεν μπορεί να είναι κενό.` };
+        }
+        if (trimmed.startsWith('-')) {
+            return { isValid: false, normalized: '', numValue: 0, error: `Το πεδίο (${fieldName}) δεν μπορεί να είναι αρνητικός αριθμός.` };
+        }
+        const withComma = trimmed.replace(/\./g, ',');
+        const commaCount = (withComma.match(/,/g) || []).length;
+        if (commaCount > 1) {
+            return { isValid: false, normalized: '', numValue: 0, error: `Ο ${fieldName} περιέχει περισσότερες από μία υποδιαστολές (${trimmed}).` };
+        }
+        if (!/^[0-9]+(,[0-9]+)?$/.test(withComma)) {
+            if (/^,[0-9]+$/.test(withComma)) {
+                const fixed = `0${withComma}`;
+                return { isValid: true, normalized: fixed, numValue: Number(fixed.replace(',', '.')) };
+            }
+            if (/^[0-9]+,$/.test(withComma)) {
+                const fixed = withComma.slice(0, -1);
+                return { isValid: true, normalized: fixed, numValue: Number(fixed) };
+            }
+            if (withComma === ',') {
+                return { isValid: false, normalized: '', numValue: 0, error: `Εισαγάγατε μόνο υποδιαστολή χωρίς ψηφία.` };
+            }
+            return { isValid: false, normalized: '', numValue: 0, error: `Ο ${fieldName} περιέχει μη έγκυρους χαρακτήρες (${trimmed}). Επιτρέπονται μόνο αριθμητικά ψηφία.` };
+        }
+        const parts = withComma.split(',');
+        const intPart = parts[0].replace(/^0+(?=\d)/, '') || '0';
+        const normalized = parts.length > 1 ? `${intPart},${parts[1]}` : intPart;
+        const numValue = Number(normalized.replace(',', '.'));
+        if (isNaN(numValue) || !isFinite(numValue)) {
+            return { isValid: false, normalized: '', numValue: 0, error: `Μη έγκυρη αριθμητική τιμή στο πεδίο (${fieldName}).` };
+        }
+        if (numValue > 999999) {
+            return { isValid: false, normalized: '', numValue: 0, error: `Ο ${fieldName} είναι υπερβολικά μεγάλος (έως 999.999).` };
+        }
+        return { isValid: true, normalized, numValue };
+    }
+
+    function getDecimalCount(val) {
+        const parts = val.split(',');
+        return parts.length > 1 ? parts[1].length : 0;
+    }
+
+    function shiftDecimalRight(val, places) {
+        if (places <= 0) return val;
+        const parts = val.split(',');
+        let intPart = parts[0] || '0';
+        let decPart = parts[1] || '';
+
+        if (decPart.length <= places) {
+            const zerosNeeded = places - decPart.length;
+            const combined = intPart + decPart + '0'.repeat(zerosNeeded);
+            return combined.replace(/^0+(?=\d)/, '') || '0';
+        } else {
+            const newIntPart = (intPart + decPart.slice(0, places)).replace(/^0+(?=\d)/, '') || '0';
+            const newDecPart = decPart.slice(places);
+            return `${newIntPart},${newDecPart}`;
+        }
+    }
+
+    function isTerminatingDivision(dividendStr, divisorStr) {
+        try {
+            const divParts = dividendStr.replace(/\./g, ',').split(',');
+            const disParts = divisorStr.replace(/\./g, ',').split(',');
+
+            const divDec = divParts[1] ? divParts[1].length : 0;
+            const disDec = disParts[1] ? disParts[1].length : 0;
+            const maxDec = Math.max(divDec, disDec);
+
+            const divInt = Math.round(Number(dividendStr.replace(',', '.')) * Math.pow(10, maxDec));
+            const disInt = Math.round(Number(divisorStr.replace(',', '.')) * Math.pow(10, maxDec));
+
+            if (disInt === 0) return false;
+            if (divInt === 0) return true;
+
+            let a = Math.abs(divInt);
+            let b = Math.abs(disInt);
+            while (b) {
+                const t = b;
+                b = a % b;
+                a = t;
+            }
+            const gcd = a;
+            let reducedDivisor = Math.abs(disInt) / gcd;
+
+            while (reducedDivisor % 2 === 0) reducedDivisor /= 2;
+            while (reducedDivisor % 5 === 0) reducedDivisor /= 5;
+
+            return reducedDivisor === 1;
+        } catch {
+            return false;
+        }
+    }
+
+    function solveDivision(dividendInput, divisorInput, maxDecimalPlaces = 3) {
+        const divValidation = validateAndNormalizeNumber(dividendInput, 'Διαιρετέος');
+        if (!divValidation.isValid) throw new Error(divValidation.error || 'Μη έγκυρος Διαιρετέος.');
+
+        const disValidation = validateAndNormalizeNumber(divisorInput, 'Διαιρέτης');
+        if (!disValidation.isValid) throw new Error(disValidation.error || 'Μη έγκυρος Διαιρέτης.');
+
+        if (disValidation.numValue === 0) throw new Error('Ο διαιρέτης δεν μπορεί να είναι 0!');
+
+        const cleanDividend = divValidation.normalized;
+        const cleanDivisor = disValidation.normalized;
+
+        const divisorDecimals = getDecimalCount(cleanDivisor);
+        const wasShifted = divisorDecimals > 0;
+        const shiftMultiplier = Math.pow(10, divisorDecimals);
+
+        let effectiveDividendStr = cleanDividend;
+        let effectiveDivisorStr = cleanDivisor;
+        let shiftExplanation = '';
+
+        if (wasShifted) {
+            effectiveDivisorStr = shiftDecimalRight(cleanDivisor, divisorDecimals);
+            effectiveDividendStr = shiftDecimalRight(cleanDividend, divisorDecimals);
+            shiftExplanation = `Επειδή ο διαιρέτης (${cleanDivisor}) είναι δεκαδικός με ${divisorDecimals} δεκαδικό${divisorDecimals > 1 ? 'α' : ''} ψηφί${divisorDecimals > 1 ? 'α' : 'ο'}, πολλαπλασιάζουμε και τους δύο αριθμούς &times; ${shiftMultiplier}. Έτσι εκτελούμε την ισοδύναμη διαίρεση: ${effectiveDividendStr} : ${effectiveDivisorStr}`;
+        }
+
+        const shiftInfo = {
+            wasShifted,
+            shiftMultiplier,
+            originalDividend: cleanDividend,
+            originalDivisor: cleanDivisor,
+            shiftedDividend: effectiveDividendStr,
+            shiftedDivisor: effectiveDivisorStr,
+            explanation: shiftExplanation,
+        };
+
+        const effectiveDivisor = parseInt(effectiveDivisorStr.replace(',', ''), 10);
+        if (isNaN(effectiveDivisor) || effectiveDivisor === 0) throw new Error('Μη έγκυρος ακέραιος διαιρέτης.');
+
+        const baseDividendStr = effectiveDividendStr;
+
+        const isTerminating = isTerminatingDivision(cleanDividend, cleanDivisor);
+        const allowedMaxDecimals = isTerminating ? 6 : maxDecimalPlaces;
+
+        if (divValidation.numValue === 0) {
+            const singleStep = {
+                stepIndex: 0,
+                currentChunk: 0,
+                chunkDigitsStr: '0',
+                quotientDigit: 0,
+                isDecimalPointPlacedHere: false,
+                product: 0,
+                remainder: 0,
+                broughtDownDigit: null,
+                broughtDownFromIndex: null,
+                isBroughtDownZero: false,
+                hasSubtraction: true,
+                columnEndIndex: 0,
+                hints: {
+                    quotientPrompt: `Πόσες φορές χωράει το ${effectiveDivisor} στο 0;`,
+                    productPrompt: `0 × ${effectiveDivisor} = 0`,
+                    remainderPrompt: `0 - 0 = 0`,
+                    bringDownPrompt: `Η διαίρεση ολοκληρώθηκε!`,
+                    detailedExplanation: `Το ${effectiveDivisor} στο 0 χωράει 0 φορές. 0 × ${effectiveDivisor} = 0, υπόλοιπο 0. Το πηλίκο είναι 0.`,
+                },
+            };
+            return {
+                originalDividendStr: cleanDividend,
+                originalDivisorStr: cleanDivisor,
+                baseDividendStr: cleanDividend,
+                effectiveDividendStr: '0',
+                effectiveDivisor,
+                shiftInfo,
+                steps: [singleStep],
+                quotientStr: '0',
+                finalRemainder: 0,
+                isExact: true,
+                isTerminating: true
+            };
+        }
+
+        const dividendParts = effectiveDividendStr.split(',');
+        const integerPartStr = dividendParts[0];
+        const decimalPartStr = dividendParts[1] || '';
+
+        const steps = [];
+        let quotientStr = '';
+        let currentChunk = 0;
+        let currentChunkCol = -1;
+        let decimalPlaced = false;
+        let addedZeroCount = 0;
+        let displayDividendStr = effectiveDividendStr;
+        let digitPointer = 0;
+
+        const intVal = parseInt(integerPartStr, 10);
+        const isPureInteger = (decimalPartStr.length === 0);
+
+        let allDigits = [];
+
+        if (isPureInteger && intVal < effectiveDivisor) {
+            // Παιδαγωγική διαδικασία Δημοτικού όταν ο ακέραιος διαιρετέος είναι μικρότερος από τον διαιρέτη (π.χ. 3 : 75)
+            // «Το 75 δεν χωράει στο 3. Βάζουμε 0 και κόμμα στο πηλίκο (0,) και προσθέτουμε ένα μηδενικό στον διαιρετέο (30).»
+            // «Το 75 δεν χωράει στο 30. Βάζουμε 0 στο πηλίκο (0,0) και προσθέτουμε μηδέν στον διαιρετέο (300).»
+            quotientStr = '0,';
+            decimalPlaced = true;
+            currentChunk = intVal;
+            let runningDividendStr = integerPartStr;
+
+            let zerosAdded = 0;
+            while (currentChunk < effectiveDivisor) {
+                let prevChunk = currentChunk;
+                currentChunk = currentChunk * 10;
+                runningDividendStr += '0';
+                zerosAdded++;
+                let isFirst = (zerosAdded === 1);
+                if (!isFirst) quotientStr += '0';
+
+                steps.push({
+                    stepIndex: steps.length,
+                    currentChunk: prevChunk,
+                    chunkDigitsStr: prevChunk.toString(),
+                    quotientDigit: 0,
+                    isDecimalPointPlacedHere: isFirst,
+                    product: 0,
+                    remainder: prevChunk,
+                    broughtDownDigit: '0',
+                    broughtDownFromIndex: null,
+                    isBroughtDownZero: true,
+                    columnEndIndex: runningDividendStr.length - 2,
+                    isInitialZero: true,
+                    hasSubtraction: false,
+                    hints: {
+                        quotientPrompt: isFirst
+                            ? `Το ${effectiveDivisor} δεν χωράει στο ${prevChunk}. Βάζουμε μηδέν και κόμμα στο πηλίκο (${quotientStr}) και προσθέτουμε ένα μηδενικό στον διαιρετέο (${runningDividendStr}).`
+                            : `Το ${effectiveDivisor} δεν χωράει στο ${prevChunk}. Βάζουμε μηδέν στο πηλίκο (${quotientStr}) και προσθέτουμε μηδέν στον διαιρετέο (${runningDividendStr}).`,
+                        productPrompt: `0 × ${effectiveDivisor} = 0`,
+                        remainderPrompt: `${prevChunk} - 0 = ${prevChunk}`,
+                        bringDownPrompt: `Προσθέτουμε 0 στον διαιρετέο &rarr; ${currentChunk}`,
+                        detailedExplanation: isFirst
+                            ? `Το ${effectiveDivisor} δεν χωράει στο ${prevChunk}. Γράφουμε 0, στο πηλίκο και προσθέτουμε ένα μηδενικό στο τέλος του διαιρετέου.`
+                            : `Το ${effectiveDivisor} δεν χωράει στο ${prevChunk}. Γράφουμε 0 στο πηλίκο και προσθέτουμε άλλο ένα μηδενικό στο τέλος του διαιρετέου.`
+                    }
+                });
+            }
+            displayDividendStr = runningDividendStr;
+            currentChunkCol = displayDividendStr.length - 1;
+            digitPointer = 0;
+        } else {
+            for (let i = 0; i < integerPartStr.length; i++) {
+                allDigits.push({ digit: integerPartStr[i], originalIndex: i, col: i, isDecimal: false });
+            }
+            for (let i = 0; i < decimalPartStr.length; i++) {
+                allDigits.push({ digit: decimalPartStr[i], originalIndex: integerPartStr.length + 1 + i, col: integerPartStr.length + i, isDecimal: true });
+            }
+
+            if (intVal < effectiveDivisor) {
+                currentChunk = intVal;
+                currentChunkCol = integerPartStr.length - 1;
+                decimalPlaced = true;
+                quotientStr = '0,';
+
+                steps.push({
+                    stepIndex: 0,
+                    currentChunk,
+                    chunkDigitsStr: currentChunk.toString(),
+                    quotientDigit: 0,
+                    isDecimalPointPlacedHere: true,
+                    product: 0,
+                    remainder: currentChunk,
+                    broughtDownDigit: null,
+                    broughtDownFromIndex: null,
+                    isBroughtDownZero: false,
+                    columnEndIndex: currentChunkCol,
+                    isInitialZero: true,
+                    hasSubtraction: false,
+                    hints: {
+                        quotientPrompt: `Το ακέραιο μέρος (${currentChunk}) είναι μικρότερο από το ${effectiveDivisor}. Βάζουμε 0, στο πηλίκο!`,
+                        productPrompt: `0 × ${effectiveDivisor} = 0`,
+                        remainderPrompt: `${currentChunk} - 0 = ${currentChunk}`,
+                        bringDownPrompt: `Παίρνουμε το επόμενο δεκαδικό ψηφίο!`,
+                        detailedExplanation: `Επειδή το ακέραιο μέρος (${currentChunk}) είναι μικρότερο από το ${effectiveDivisor}, γράφουμε 0, στο πηλίκο και συνεχίζουμε.`
+                    }
+                });
+
+                let entry = allDigits[integerPartStr.length];
+                currentChunk = currentChunk * 10 + parseInt(entry.digit, 10);
+                currentChunkCol = entry.col;
+                digitPointer = integerPartStr.length + 1;
+            } else {
+                digitPointer = 0;
+                let initialChunkStr = '';
+                while (digitPointer < allDigits.length) {
+                    const entry = allDigits[digitPointer++];
+                    initialChunkStr += entry.digit;
+                    currentChunkCol = entry.col;
+                    if (parseInt(initialChunkStr, 10) >= effectiveDivisor) break;
+                }
+                currentChunk = parseInt(initialChunkStr, 10);
+            }
+        }
+
+        let finished = false;
+        let safetyCounter = 0;
+
+        while (!finished && safetyCounter < 100) {
+            safetyCounter++;
+            const quotientDigit = Math.floor(currentChunk / effectiveDivisor);
+            const product = quotientDigit * effectiveDivisor;
+            const remainder = currentChunk - product;
+
+            let isDecimalPlacedHere = false;
+            if (!decimalPlaced) {
+                if (digitPointer >= integerPartStr.length) {
+                    decimalPlaced = true;
+                    isDecimalPlacedHere = true;
+                    quotientStr += quotientDigit.toString() + ',';
+                } else {
+                    quotientStr += quotientDigit.toString();
+                }
+            } else {
+                quotientStr += quotientDigit.toString();
+            }
+
+            let broughtDownDigit = null;
+            let broughtDownFromIndex = null;
+            let broughtDownCol = null;
+            let isBroughtDownZero = false;
+
+            if (digitPointer < allDigits.length) {
+                const entry = allDigits[digitPointer++];
+                broughtDownDigit = entry.digit;
+                broughtDownFromIndex = entry.originalIndex;
+                broughtDownCol = entry.col;
+            } else {
+                const currentDecimals = quotientStr.includes(',') ? (quotientStr.split(',')[1] || '').length : 0;
+                if (remainder === 0) {
+                    finished = true;
+                } else if (currentDecimals < allowedMaxDecimals) {
+                    if (!decimalPlaced) {
+                        decimalPlaced = true;
+                        isDecimalPlacedHere = true;
+                        if (!quotientStr.includes(',')) quotientStr += ',';
+                    }
+                    broughtDownDigit = '0';
+                    const hasAnySubSoFar = (quotientDigit > 0) || steps.some(s => s.hasSubtraction);
+                    if (!hasAnySubSoFar) {
+                        displayDividendStr += '0';
+                        const ghostDigitCount = displayDividendStr.replace(/[,.]/g, '').length;
+                        broughtDownCol = ghostDigitCount - 1;
+                    } else {
+                        const ghostDigitCount = displayDividendStr.replace(/[,.]/g, '').length;
+                        broughtDownCol = ghostDigitCount + addedZeroCount++;
+                    }
+                    isBroughtDownZero = true;
+                } else {
+                    finished = true;
+                }
+            }
+
+            const nextChunk = broughtDownDigit !== null ? remainder * 10 + parseInt(broughtDownDigit, 10) : null;
+            const hasAnySubSoFarForHint = (quotientDigit > 0) || steps.some(s => s.hasSubtraction);
+
+            steps.push({
+                stepIndex: steps.length,
+                currentChunk,
+                chunkDigitsStr: currentChunk.toString(),
+                quotientDigit,
+                isDecimalPointPlacedHere: isDecimalPlacedHere,
+                product,
+                remainder,
+                broughtDownDigit,
+                broughtDownFromIndex,
+                isBroughtDownZero,
+                nextChunk,
+                columnEndIndex: currentChunkCol,
+                isInitialZero: false,
+                hasSubtraction: quotientDigit > 0,
+                hints: {
+                    quotientPrompt: quotientDigit === 0
+                        ? `Το ${effectiveDivisor} στο ${currentChunk} δεν χωράει (0 φορές). Βάζουμε 0 στο πηλίκο!`
+                        : `Πόσες φορές χωράει το ${effectiveDivisor} στο ${currentChunk}; (${quotientDigit} φορές)`,
+                    productPrompt: `Πολλαπλασιάζουμε: ${quotientDigit} × ${effectiveDivisor} = ${product}`,
+                    remainderPrompt: `Αφαιρούμε: ${currentChunk} - ${product} = ${remainder}`,
+                    bringDownPrompt: broughtDownDigit !== null 
+                        ? (isBroughtDownZero 
+                            ? (!hasAnySubSoFarForHint
+                                ? `Προσθέτουμε ένα μηδενικό στον διαιρετέο (${displayDividendStr}) &rarr; ${nextChunk}`
+                                : `Το υπόλοιπο είναι ${remainder}. Προσθέτουμε 0 για να συνεχιστεί η διαίρεση με δεκαδικά.`)
+                            : `Κατεβάζουμε το ψηφίο ${broughtDownDigit} δίπλα στο υπόλοιπο ${remainder}. Νέος αριθμός: ${nextChunk}`)
+                        : `Η διαίρεση ολοκληρώθηκε!`,
+                    detailedExplanation: quotientDigit === 0
+                        ? (!hasAnySubSoFarForHint && isBroughtDownZero
+                            ? `Επειδή το ${effectiveDivisor} δεν χωράει στο ${currentChunk}, γράφουμε 0 στο πηλίκο και προσθέτουμε ένα μηδενικό στο τέλος του διαιρετέου.`
+                            : `Επειδή το ${effectiveDivisor} δεν χωράει στο ${currentChunk}, γράφουμε 0 στο πηλίκο.`)
+                        : `Το ${effectiveDivisor} χωράει ${quotientDigit} φορές στο ${currentChunk} (${quotientDigit} × ${effectiveDivisor} = ${product}). Αφαιρούμε και βρίσκουμε υπόλοιπο ${remainder}.`
+                }
+            });
+
+            if (finished || nextChunk === null) break;
+            currentChunk = nextChunk;
+            currentChunkCol = broughtDownCol;
+        }
+
+        if (quotientStr.endsWith(',')) quotientStr = quotientStr.slice(0, -1);
+
+        const finalStep = steps[steps.length - 1];
+        const finalRemainder = finalStep ? finalStep.remainder : 0;
+        const isExact = finalRemainder === 0;
+
+        return {
+            originalDividendStr: cleanDividend,
+            originalDivisorStr: cleanDivisor,
+            baseDividendStr,
+            effectiveDividendStr: displayDividendStr,
+            effectiveDivisor,
+            shiftInfo,
+            steps,
+            quotientStr,
+            finalRemainder,
+            isExact,
+            isTerminating
+        };
+    }
+
+    // --- ΟΠΤΙΚΗ ΑΝΑΠΑΡΑΣΤΑΣΗ ΔΕΚΑΔΙΚΗΣ ΚΑΘΕΤΗΣ ΔΙΑΙΡΕΣΗΣ ---
+    function generateDecimalDivisionVisual(problem) {
+        const {
+            shiftInfo,
+            effectiveDividendStr,
+            effectiveDivisor,
+            quotientStr,
+            steps,
+            finalRemainder,
+            isExact,
+            isTerminating,
+            originalDividendStr,
+            originalDivisorStr
+        } = problem;
+
+        // 1. Shift banner αν χρειάστηκε μετατροπή
+        let bannerHTML = "";
+        if (shiftInfo && shiftInfo.wasShifted) {
+            bannerHTML = `
+            <div class="shift-banner">
+                <div class="shift-title">💡 Μετατροπή σε Ακέραιο Διαιρέτη (Κανόνας Δημοτικού)</div>
+                <div class="shift-desc">${shiftInfo.explanation}</div>
+                <div class="shift-formula">
+                    <span>${originalDividendStr} : ${originalDivisorStr}</span>
+                    <span class="shift-arrow">&rarr;</span>
+                    <span class="shift-highlight">${shiftInfo.shiftedDividend} : ${shiftInfo.shiftedDivisor}</span>
+                </div>
+            </div>`;
+        }
+
+        // 2. Μαθηματική Ταυτότητα
+        let identityHTML = "";
+        if (isExact) {
+            identityHTML = `
+            <div class="identity-line">
+                <span style="color:var(--highlight-color); font-weight:bold;">${originalDividendStr}</span> : 
+                <span style="color:var(--text-main); font-weight:bold;">${originalDivisorStr}</span> = 
+                <span style="color:var(--quotient-color); font-weight:bold; font-size:26px;">${quotientStr}</span>
+                <span class="badge badge-exact">✅ Τέλεια διαίρεση</span>
+            </div>`;
+        } else {
+            identityHTML = `
+            <div class="identity-line">
+                <span style="color:var(--highlight-color); font-weight:bold;">${originalDividendStr}</span> : 
+                <span style="color:var(--text-main); font-weight:bold;">${originalDivisorStr}</span> &approx; 
+                <span style="color:var(--quotient-color); font-weight:bold; font-size:26px;">${quotientStr}</span>
+                <span class="badge badge-approx">${isTerminating ? 'Περατή (προσέγγιση)' : '🔄 Μη περατή / Περιοδική'}</span>
+            </div>`;
+        }
+
+        // 3. Στήλες και Βήματα Κάθετης Διάταξης (Grid με Ghost-Comma όπως στο V-MUL)
+        // Ανάλυση ψηφίων του διαιρετέου και εντοπισμός υποδιαστολής (ghost-comma)
+        let divDigits = [];
+        for (let i = 0; i < effectiveDividendStr.length; i++) {
+            let char = effectiveDividendStr[i];
+            if (char === '.' || char === ',') {
+                if (divDigits.length > 0) divDigits[divDigits.length - 1].mark = ',';
+            } else {
+                divDigits.push({ val: char, mark: null });
+            }
+        }
+
+        // Υπολογισμός μέγιστου αριθμού στηλών
+        let maxCol = divDigits.length - 1;
+        for (let i = 0; i < steps.length; i++) {
+            const step = steps[i];
+            if (step.hasSubtraction) {
+                let colEnd = step.columnEndIndex !== undefined ? step.columnEndIndex : step.chunkDigitsStr.length - 1;
+                if (colEnd > maxCol) maxCol = colEnd;
+            }
+        }
+        const totalCols = maxCol + 1;
+
+        function buildRowHTML(cellsMap) {
+            let html = '<div class="ld-grid-row">';
+            for (let c = 0; c < totalCols; c++) {
+                if (cellsMap[c]) {
+                    const cell = cellsMap[c];
+                    const cls = cell.className ? ` ${cell.className}` : '';
+                    html += `<div class="ld-cell${cls}">${cell.content}</div>`;
+                } else {
+                    html += '<div class="ld-cell"></div>';
+                }
+            }
+            html += '</div>';
+            return html;
+        }
+
+        let rowsHTML = [];
+
+        // 1η Γραμμή: Διαιρετέος με ghost-comma (η υποδιαστολή δεν καταλαμβάνει πλάτος στήλης)
+        let topRowCells = {};
+        for (let c = 0; c < divDigits.length; c++) {
+            let d = divDigits[c];
+            let ghost = d.mark === ',' ? '<span class="ghost-comma">,</span>' : '';
+            topRowCells[c] = { content: `${d.val}${ghost}`, className: '' };
+        }
+        rowsHTML.push(buildRowHTML(topRowCells));
+
+        // Βήματα αφαίρεσης
+        let isFirstSubtraction = true;
+        let prevSubStep = null;
+        for (let i = 0; i < steps.length; i++) {
+            const step = steps[i];
+            if (!step.hasSubtraction) continue;
+
+            const prodStr = step.product.toString();
+            let colEnd = step.columnEndIndex !== undefined ? step.columnEndIndex : step.chunkDigitsStr.length - 1;
+
+            // Εμφάνιση του τρέχοντος chunk αν δεν είναι το πρώτο βήμα
+            if (!isFirstSubtraction) {
+                // Υπολογισμός εμφάνισης chunk: διατηρούμε το υπόλοιπο της προηγούμενης αφαίρεσης (π.χ. '0' + '5' = '05')
+                let chunkStr = step.currentChunk.toString();
+                if (prevSubStep) {
+                    let remStr = prevSubStep.remainder.toString();
+                    let bd = prevSubStep.broughtDownDigit !== null ? prevSubStep.broughtDownDigit.toString() : '';
+                    let combined = remStr + bd;
+                    if (combined) chunkStr = combined;
+                }
+
+                let chunkCells = {};
+                let startCol = colEnd - chunkStr.length + 1;
+                for (let k = 0; k < chunkStr.length; k++) {
+                    chunkCells[startCol + k] = { content: chunkStr[k], className: '' };
+                }
+                rowsHTML.push(buildRowHTML(chunkCells));
+            }
+            isFirstSubtraction = false;
+            prevSubStep = step;
+
+            // Γραμμή αφαίρεσης (αφαιρετέος) με υπογράμμιση και σύμβολο μείον
+            let prodCells = {};
+            let startProdCol = colEnd - prodStr.length + 1;
+            for (let k = 0; k < prodStr.length; k++) {
+                let prefix = (k === 0) ? '<span class="ld-minus">-</span>' : '';
+                prodCells[startProdCol + k] = {
+                    content: `${prefix}${prodStr[k]}`,
+                    className: 'ld-subtrahend-cell'
+                };
+            }
+            rowsHTML.push(buildRowHTML(prodCells));
+
+            // Τελικό υπόλοιπο στο τελευταίο βήμα
+            if (i === steps.length - 1) {
+                let remStr = step.remainder.toString();
+                let remCells = {};
+                let startRemCol = colEnd - remStr.length + 1;
+                for (let k = 0; k < remStr.length; k++) {
+                    remCells[startRemCol + k] = { content: remStr[k], className: '' };
+                }
+                rowsHTML.push(buildRowHTML(remCells));
+            }
+        }
+
+        function formatQuotientWithGhostComma(qStr) {
+            if (!qStr || typeof qStr !== 'string') return qStr || '0';
+            if (!qStr.includes(',')) return qStr;
+            let parts = qStr.split(',');
+            let intPart = parts[0];
+            let decPart = parts[1] || '';
+            let html = '';
+            for (let i = 0; i < intPart.length; i++) {
+                if (i === intPart.length - 1) {
+                    html += `<span class="ld-q-cell">${intPart[i]}<span class="ghost-comma">,</span></span>`;
+                } else {
+                    html += `<span class="ld-q-cell">${intPart[i]}</span>`;
+                }
+            }
+            for (let i = 0; i < decPart.length; i++) {
+                html += `<span class="ld-q-cell">${decPart[i]}</span>`;
+            }
+            return `<span class="ld-q-container">${html}</span>`;
+        }
+
+        // Συναρμολόγηση του European / Greek Long Division σχήματος
+        let visualHTML = `
+            <div class="calc-action-bar">
+                <button class="btn-copy-img" onclick="copyVisualAsImage('printable-ddiv', this)" title="Αντιγραφή πράξης ως εικόνα στο πρόχειρο (PNG)">
+                    <span>📷</span> <span>Αντιγραφή ως Εικόνα</span>
+                </button>
+            </div>
+            <div id="printable-ddiv" class="printable-calc-card">
+                ${bannerHTML}
+                ${identityHTML}
+                <div class="long-div-container">
+                    <div class="ld-left-col">${rowsHTML.join("")}</div>
+                    <div class="ld-right-col">
+                        <div class="ld-divisor">${effectiveDivisor}</div>
+                        <div class="ld-quotient">${formatQuotientWithGhostComma(quotientStr)}</div>
+                    </div>
+                </div>
+                <div style="text-align:center; margin-top:10px; font-size:15px; color:var(--text-muted);">
+                    Υπόλοιπο: <b>${finalRemainder}</b>
+                </div>
+            </div>`;
+
+        // 4. Παιδαγωγικά Βήματα (Accordion Drawer)
+        let pedStepsCards = steps.map((s, idx) => `
+            <div class="ped-step-card">
+                <div class="ped-step-badge">Βήμα ${idx + 1}</div>
+                <div class="ped-step-item"><strong>🤔 Ερώτηση:</strong> ${s.hints.quotientPrompt}</div>
+                <div class="ped-step-item"><strong>✖️ Πολλαπλασιασμός:</strong> ${s.hints.productPrompt}</div>
+                <div class="ped-step-item"><strong>➖ Αφαίρεση:</strong> ${s.hints.remainderPrompt}</div>
+                <div class="ped-step-item"><strong>⬇️ Επόμενη ενέργεια:</strong> ${s.hints.bringDownPrompt}</div>
+                <div class="ped-step-detail">💡 <em>${s.hints.detailedExplanation}</em></div>
+            </div>
+        `).join("");
+
+        visualHTML += `
+            <div class="pedagogical-container">
+                <button class="pedagogical-toggle" onclick="togglePedagogicalSteps()">
+                    <span>📖 Αναλυτικά Βήματα Σκέψης (Παιδαγωγικός Οδηγός)</span>
+                    <span id="ped-toggle-icon">▼</span>
+                </button>
+                <div id="pedagogical-steps-content" class="pedagogical-content" style="display:none;">
+                    ${pedStepsCards}
+                </div>
+            </div>`;
+
+        return visualHTML;
+    }
+
+    function togglePedagogicalSteps() {
+        const content = document.getElementById('pedagogical-steps-content');
+        const icon = document.getElementById('ped-toggle-icon');
+        if (content.style.display === 'none') {
+            content.style.display = 'flex';
+            icon.innerText = '▲';
+        } else {
+            content.style.display = 'none';
+            icon.innerText = '▼';
+        }
+    }
+
+    // --- ΕΥΚΛΕΙΔΕΙΑ ΔΙΑΙΡΕΣΗ (E-DIV ΑΚΕΡΑΙΩΝ) ---
     function generateLongDivision(dividend, divisor) {
         if (!Number.isInteger(dividend) || !Number.isInteger(divisor)) return { error: "Integers Only" };
         if (divisor === 0) return { error: "Div by 0" };
@@ -558,27 +1457,20 @@
         let intA = parseInt(strA.replace('.', ''));
         let intB = parseInt(strB.replace('.', ''));
 
-        // Prepare Display Strings (Standard Format 1.234,56)
         let displayA = formatStandard(strA);
         let displayB = formatStandard(strB);
 
-        // Digits for Calculation (Integers)
         let digitsB = intB.toString().split('').map(Number).reverse();
-        
-        // Calculate Grid Width
         let finalIntResult = (BigInt(intA) * BigInt(intB)).toString();
         let cols = Math.max(displayA.replace(/[.,]/g,'').length, displayB.replace(/[.,]/g,'').length, finalIntResult.length) + 2; 
 
-        // Helper to Create Row Cells
         function createRowCells(formattedStr, totalCols, isResult = false, prefix = null) {
             let cells = [];
             let cleanDigits = [];
             for (let i=0; i<formattedStr.length; i++) {
                 let char = formattedStr[i];
                 if (char === '.' || char === ',') {
-                    if (cleanDigits.length > 0) {
-                        cleanDigits[cleanDigits.length-1].mark = char;
-                    }
+                    if (cleanDigits.length > 0) cleanDigits[cleanDigits.length-1].mark = char;
                 } else {
                     cleanDigits.push({ val: char, mark: null });
                 }
@@ -610,7 +1502,6 @@
         gridHtml += createRowCells(displayB, cols, false, "×");
         gridHtml += `<div class="grid-border"></div>`;
 
-        // Partial Products
         for (let i = 0; i < digitsB.length; i++) {
             let digit = digitsB[i];
             let product = intA * digit;
@@ -626,7 +1517,6 @@
             let effectiveLen = cleanDigits.length;
             let endPos = cols - 1 - i; 
             let startPos = endPos - effectiveLen + 1;
-            
             let prefix = (digitsB.length > 1 && i === digitsB.length - 1) ? "+" : "";
             
             if (digitsB.length > 1) {
@@ -680,13 +1570,41 @@
         smartFocus(); 
     });
 
+    const OPERATORS = ['+', '-', '\\cdot', '\\times', '\\div', ':', '/', '^', '='];
+
+    function handleSmartInput(isOperator) {
+        if (!justCalculated) return;
+        
+        if (isOperator) {
+            // Αν πατηθεί τελεστής αμέσως μετά τον υπολογισμό:
+            // Εισάγουμε το Ans (αν υπάρχει) ώστε ο μαθητής να συνεχίσει πάνω στο αποτέλεσμα
+            if (lastAns !== null) {
+                mathField.latex('\\text{Ans}');
+            }
+        } else {
+            // Αν πατηθεί αριθμός ή συνάρτηση/θεωρία:
+            // Καθαρίζει η οθόνη για νέα πράξη
+            mathField.latex('');
+            document.getElementById('results').style.display = 'none';
+        }
+        justCalculated = false;
+    }
+
     function writeCmd(cmd) {
+        const isOperator = OPERATORS.includes(cmd);
+        if (cmd === ')' || cmd === ';') {
+            justCalculated = false;
+        } else {
+            handleSmartInput(isOperator);
+        }
+
         if (cmd === '/') mathField.cmd('\\frac');
         else mathField.cmd(cmd);
         smartFocus();
     }
     
     function insertTheory(name) {
+        handleSmartInput(false);
         mathField.write('\\text{' + name + '}\\left(\\right)');
         mathField.keystroke('Left'); 
         smartFocus();
@@ -694,6 +1612,11 @@
     
     function insertAns() {
         if (lastAns === null) return;
+        if (justCalculated) {
+            mathField.latex('');
+            document.getElementById('results').style.display = 'none';
+            justCalculated = false;
+        }
         mathField.write(lastAns);
         smartFocus();
     }
@@ -703,6 +1626,7 @@
         document.getElementById('results').style.display = 'none';
         historyIndex = -1;
         currentDraft = ""; 
+        justCalculated = false;
         smartFocus();
     }
 
@@ -722,13 +1646,9 @@
         return `<span class="value">${sign}<div class="fraction-render"><span class="frac-top">${Math.abs(num)}</span><span class="frac-bottom">${Math.abs(den)}</span></div></span>`;
     }
 
-    // --- FINAL: Επίλυση με Έλεγχο Γραμμικότητας (Χωρίς Επαλήθευση) ---
     function solveLinearEquation(eqStr) {
-        // 1. Regex για Ελληνικά/Λατινικά
         const match = eqStr.match(/[a-zA-Z\u0370-\u03FF\u1F00-\u1FFF]/);
         const variable = match ? match[0] : 'x';
-
-        // 2. Διόρθωση 0x -> 0*x
         eqStr = eqStr.replace(/(\d)([a-zA-Z\u0370-\u03FF\u1F00-\u1FFF])/g, '$1*$2');
 
         const parts = eqStr.split('=');
@@ -736,7 +1656,6 @@
         
         const expression = `(${parts[0]}) - (${parts[1]})`;
 
-        // Helper: Υπολογισμός τιμής
         const tryEval = (expr, val) => {
             try {
                 const scope = {}; 
@@ -749,7 +1668,6 @@
             }
         };
 
-        // Helper: Έλεγχος Γραμμικότητας (3 σημεία) και Επίλυση
         const checkLinearityAndSolve = (expr, startX) => {
             let y1 = tryEval(expr, startX);
             let y2 = tryEval(expr, startX + 1);
@@ -760,10 +1678,7 @@
             let slope1 = y2 - y1;
             let slope2 = y3 - y2;
 
-            // Αν η κλίση αλλάζει, είναι καμπύλη (μη γραμμική)
-            if (Math.abs(slope1 - slope2) > 1e-7) {
-                return "NonLinear"; 
-            }
+            if (Math.abs(slope1 - slope2) > 1e-7) return "NonLinear"; 
 
             let a = slope1;
             let b = y1 - (a * startX);
@@ -776,32 +1691,25 @@
             return -b / a;
         };
 
-        // --- ΒΗΜΑ 1: Δοκιμή ως απλή γραμμική ---
         let resStandard = checkLinearityAndSolve(expression, 0);
-        
         if (resStandard === "NonLinear") return "Η εξίσωση δεν είναι γραμμική";
         if (typeof resStandard === 'number') return { val: resStandard, variable: variable };
         if (typeof resStandard === 'string') return resStandard; 
 
-        // --- ΒΗΜΑ 2: Περίπτωση Παρονομαστή ---
         if (tryEval(expression, 0) === null) {
             const rationalExpr = `(${expression}) * ${variable}`;
             let resRational = checkLinearityAndSolve(rationalExpr, 1);
-
             if (resRational === "NonLinear") return "Η εξίσωση δεν είναι γραμμική";
-            
             if (typeof resRational === 'number') {
                 if (math.abs(resRational) < 1e-9) return "Εκτός ορίων (Τείνει στο 0)";
                 return { val: resRational, variable: variable };
             }
-
             if (typeof resRational === 'string') return resRational;
         }
 
         return "Error in solving";
     }
 
-    // --- FINAL FIX: Διόρθωση Parsing Κλασμάτων (για σωστή σειρά πράξεων) ---
     function parseLatexFractions(str) {
         while (str.indexOf('\\frac') !== -1) {
             let i = str.indexOf('\\frac');
@@ -811,11 +1719,7 @@
             let startDen = str.indexOf('{', endNum);
             if (startDen === -1) break;
             let [den, endDen] = extractBalancedBlock(str, startDen);
-            
-            // Η αλλαγή: Διπλές παρενθέσεις ( (...) / (...) )
-            // Εξασφαλίζει ότι το αποτέλεσμα της διαίρεσης αντιμετωπίζεται ως ενιαίος αριθμός
             let replacement = `((${num})/(${den}))`;
-            
             str = str.substring(0, i) + replacement + str.substring(endDen);
         }
         return str;
@@ -833,13 +1737,11 @@
 
     function extractArgsForDisplay(cleanStr) {
         let match = cleanStr.match(/\((.*)\)/);
-        if (match) {
-            return match[1].replace(/,/g, '; ');
-        }
+        if (match) return match[1].replace(/,/g, '; ');
         return "";
     }
 
-    // --- ΔΙΟΡΘΩΜΕΝΗ ΣΥΝΑΡΤΗΣΗ CALCULATE ---
+    // --- ΚΥΡΙΑ ΣΥΝΑΡΤΗΣΗ CALCULATE ---
     function calculate(isHistoryReplay = false) {
         let latex = mathField.latex();
         if(!latex && !isHistoryReplay) { 
@@ -848,18 +1750,13 @@
         }
 
         let cleanStr = latex;
-
-        // --- FIX 1: Προσθήκη πολλαπλασιασμού μετά από κλάσμα ---
-        // Αν βρει '}' ακολουθούμενο από γράμμα (π.χ. \frac{1}{2}x), βάζει '*'
         cleanStr = cleanStr.replace(/\}([a-zA-Z])/g, '}*$1');
 
         if (lastAns !== null) cleanStr = cleanStr.replace(/\\text\{Ans\}/g, `(${lastAns})`);
-        
-        // Αντικατάσταση μεικτών αριθμών
         cleanStr = cleanStr.replace(/(\d+)\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1+\\frac{$2}{$3})');
-        
         cleanStr = parseLatexFractions(cleanStr);
 
+        cleanStr = cleanStr.replace(/\\text\{D-DIV\}/g, "decDivision");
         cleanStr = cleanStr.replace(/\\text\{LCM\}/g, "lcm");
         cleanStr = cleanStr.replace(/\\text\{GCD\}/g, "gcd");
         cleanStr = cleanStr.replace(/\\text\{FACTORS\}/g, "myFactors");
@@ -907,22 +1804,35 @@
                     displayNumericResult(solution.val, contentEl, `${solution.variable} =`);
                 }
             } else {
-                // ... (Ο υπόλοιπος κώδικας στο else μένει ακριβώς ίδιος με πριν) ...
                 const isLCM = latex.includes('LCM');
                 const isGCD = latex.includes('GCD');
                 const isFactors = latex.includes('FACTORS');
                 const isDivisors = latex.includes('DIVs');
                 const runEuclidean = cleanStr.includes('euclidean');
                 const runVMul = cleanStr.includes('verticalMul');
+                const runDDiv = cleanStr.includes('decDivision');
 
                 let displayArgs = "";
                 if (isLCM || isGCD || isFactors || isDivisors) {
                     displayArgs = extractArgsForDisplay(cleanStr);
                 }
 
-                const result = (runEuclidean || runVMul) ? null : math.evaluate(cleanStr);
+                const result = (runEuclidean || runVMul || runDDiv) ? null : math.evaluate(cleanStr);
 
-                if (runEuclidean) {
+                if (runDDiv) {
+                    // --- ΔΕΚΑΔΙΚΗ ΚΑΘΕΤΗ ΔΙΑΙΡΕΣΗ (D-DIV) ---
+                    titleEl.innerText = "Δεκαδική Κάθετη Διαίρεση";
+                    let match = cleanStr.match(/decDivision\(([^,]+),([^)]+)\)/);
+                    if (!match) throw new Error("Μη έγκυρη σύνταξη. Χρησιμοποιήστε ελληνικό ερωτηματικό (;) ανάμεσα στους αριθμούς.");
+                    
+                    let dividendInput = match[1].trim().replace('.', ',');
+                    let divisorInput = match[2].trim().replace('.', ',');
+
+                    const problem = solveDivision(dividendInput, divisorInput, 3);
+                    contentEl.innerHTML = generateDecimalDivisionVisual(problem);
+
+                } else if (runEuclidean) {
+                    // --- ΕΥΚΛΕΙΔΕΙΑ ΔΙΑΙΡΕΣΗ (E-DIV) ---
                     let match = cleanStr.match(/euclidean\(([^,]+),([^)]+)\)/);
                     if (!match) throw new Error("Invalid Format");
                     let D = parseInt(match[1]);
@@ -949,7 +1859,7 @@
                             ${identity}
                             <div style="color:red; font-weight:bold; text-align:center; margin-top:20px; border:2px solid red; padding:10px;">
                                 ΣΦΑΛΜΑ ΕΠΑΛΗΘΕΥΣΗΣ<br>
-                                <span style="font-size:16px; font-weight:normal;">Ο αλγόριθμος βημάτων απέτυχε τον έλεγχο ασφαλείας.<br>Εμφανίζεται μόνο η επαληθευμένη ταυτότητα.</span>
+                                <span style="font-size:16px; font-weight:normal;">Ο αλγόριθμος βημάτων απέτυχε τον έλεγχο ασφαλείας.</span>
                             </div>`;
                     } else {
                         let identity = `<div style="text-align:center; font-size:22px; margin-bottom:10px;">
@@ -961,16 +1871,23 @@
                                         </div>`;
                         let rowsHTML = ldResult.steps.join("");
                         let visual = `
-                            ${identity}
-                            <div class="long-div-container">
-                                <div class="ld-left-col">${rowsHTML}</div>
-                                <div class="ld-right-col">
-                                    <div class="ld-divisor">${d}</div>
-                                    <div class="ld-quotient">${ldResult.quotient}</div>
-                                </div>
+                            <div class="calc-action-bar">
+                                <button class="btn-copy-img" onclick="copyVisualAsImage('printable-ediv', this)" title="Αντιγραφή πράξης ως εικόνα στο πρόχειρο (PNG)">
+                                    <span>📷</span> <span>Αντιγραφή ως Εικόνα</span>
+                                </button>
                             </div>
-                            <div style="text-align:center; margin-top:15px; font-size:16px; color:var(--text-muted);">
-                                Υπόλοιπο: <b>${ldResult.remainder}</b>
+                            <div id="printable-ediv" class="printable-calc-card">
+                                ${identity}
+                                <div class="long-div-container">
+                                    <div class="ld-left-col">${rowsHTML}</div>
+                                    <div class="ld-right-col">
+                                        <div class="ld-divisor">${d}</div>
+                                        <div class="ld-quotient">${ldResult.quotient}</div>
+                                    </div>
+                                </div>
+                                <div style="text-align:center; margin-top:15px; font-size:16px; color:var(--text-muted);">
+                                    Υπόλοιπο: <b>${ldResult.remainder}</b>
+                                </div>
                             </div>`;
                         contentEl.innerHTML = visual;
                     }
@@ -988,7 +1905,16 @@
                         if (vmResult.error) {
                             contentEl.innerHTML = `<span style="color:red">${vmResult.error}</span>`;
                         } else {
-                            contentEl.innerHTML = vmResult.visual;
+                            let visual = `
+                                <div class="calc-action-bar">
+                                    <button class="btn-copy-img" onclick="copyVisualAsImage('printable-vmul', this)" title="Αντιγραφή πράξης ως εικόνα στο πρόχειρο (PNG)">
+                                        <span>📷</span> <span>Αντιγραφή ως Εικόνα</span>
+                                    </button>
+                                </div>
+                                <div id="printable-vmul" class="printable-calc-card">
+                                    ${vmResult.visual}
+                                </div>`;
+                            contentEl.innerHTML = visual;
                         }
                     }
 
@@ -1030,14 +1956,15 @@
                 historyIndex = -1;
             }
             currentDraft = "";
+            justCalculated = true;
 
         } catch (err) {
+            justCalculated = false;
             console.error(err);
             titleEl.innerText = "ERROR";
-            contentEl.innerHTML = `<span style='color:red;'>Syntax Error.<br>Check equation or separators (;)</span>`;
+            contentEl.innerHTML = `<span style='color:red;'>${err.message || "Συντακτικό Σφάλμα.<br>Ελέγξτε τους αριθμούς ή το διαχωριστικό (;)"}</span>`;
         }
         smartFocus();
-                // --- Auto-scroll to results ---
         setTimeout(() => {
             const resultsContainer = document.getElementById('results');
             if (resultsContainer && resultsContainer.style.display !== 'none') {
@@ -1113,11 +2040,43 @@
         container.innerHTML = html;
     }
     
-    document.getElementById('math-input').addEventListener('keydown', function(e) {
+    const mathInputContainer = document.getElementById('math-input');
+    
+    // Όταν ο χρήστης κάνει κλικ ή αγγίζει μέσα στην οθόνη για να τοποθετήσει τον κέρσορα:
+    // Ακυρώνεται το αυτόματο καθάρισμα, επιτρέποντας κανονική επεξεργασία της παράστασης
+    mathInputContainer.addEventListener('mousedown', function() {
+        justCalculated = false;
+    });
+    mathInputContainer.addEventListener('touchstart', function() {
+        justCalculated = false;
+    }, {passive: true});
+
+    mathInputContainer.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             calculate();
+            return;
         }
-        else if (e.key === 'PageUp') {
+
+        if (justCalculated) {
+            const navKeys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Backspace', 'Delete', 'Home', 'End', 'Tab', 'Escape', 'Shift', 'Control', 'Alt', 'Meta'];
+            if (navKeys.includes(e.key)) {
+                // Ο χρήστης πλοηγείται ή διορθώνει την υπάρχουσα παράσταση
+                justCalculated = false;
+            } else if (['+', '-', '*', '/', '^', '='].includes(e.key)) {
+                // Συνέχιση πάνω στο αποτέλεσμα με τελεστή
+                if (lastAns !== null) {
+                    mathField.latex('\\text{Ans}');
+                }
+                justCalculated = false;
+            } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                // Νέος αριθμός ή χαρακτήρας -> καθαρισμός οθόνης για νέα πράξη
+                mathField.latex('');
+                document.getElementById('results').style.display = 'none';
+                justCalculated = false;
+            }
+        }
+
+        if (e.key === 'PageUp') {
             if (calcHistory.length > 0) {
                 e.preventDefault();
                 if (historyIndex === -1) {
@@ -1153,7 +2112,99 @@
             smartFocus();
         }
     });
+
+    // --- COPY CALCULATION AS IMAGE & TOAST NOTIFICATION ---
+    function showToastNotification(message) {
+        const toast = document.getElementById('toast-notice');
+        if (!toast) return;
+        toast.innerHTML = message;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2800);
+    }
+
+    async function copyVisualAsImage(targetId, btnElement) {
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        
+        const origHTML = btnElement ? btnElement.innerHTML : '';
+        if (btnElement) {
+            btnElement.innerHTML = '<span>⏳</span> <span>Αντιγραφή...</span>';
+            btnElement.disabled = true;
+        }
+        
+        try {
+            const currentTheme = document.body.getAttribute('data-theme') || 'light';
+            const bgColor = currentTheme === 'dark' ? '#1e1e1e' : '#ffffff';
+            
+            const canvas = await html2canvas(el, {
+                backgroundColor: bgColor,
+                scale: 2, // 2x high resolution
+                logging: false,
+                useCORS: true
+            });
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) throw new Error("Canvas error");
+                let copied = false;
+                if (navigator.clipboard && navigator.clipboard.write) {
+                    try {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({ 'image/png': blob })
+                        ]);
+                        copied = true;
+                    } catch (clipErr) {
+                        console.warn("Direct clipboard image write failed:", clipErr);
+                    }
+                }
+
+                if (copied) {
+                    if (btnElement) {
+                        btnElement.innerHTML = '<span>✅</span> <span>Αντιγράφηκε!</span>';
+                        btnElement.classList.add('btn-copy-success');
+                        setTimeout(() => {
+                            btnElement.innerHTML = origHTML;
+                            btnElement.classList.remove('btn-copy-success');
+                            btnElement.disabled = false;
+                        }, 2200);
+                    }
+                    showToastNotification('📋 Η πράξη αντιγράφηκε στο πρόχειρο ως εικόνα!');
+                } else {
+                    // Fallback αν το περιβάλλον iframe περιορίζει την άμεση εγγραφή εικόνας: Αυτόματη λήψη αρχείου
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'katheti-praxi.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    if (btnElement) {
+                        btnElement.innerHTML = '<span>💾</span> <span>Αποθηκεύτηκε!</span>';
+                        setTimeout(() => {
+                            btnElement.innerHTML = origHTML;
+                            btnElement.disabled = false;
+                        }, 2200);
+                    }
+                    showToastNotification('💾 Η εικόνα της πράξης αποθηκεύτηκε στη συσκευή σας!');
+                }
+            }, 'image/png');
+        } catch (err) {
+            console.error(err);
+            if (btnElement) {
+                btnElement.innerHTML = '<span>❌</span> <span>Σφάλμα</span>';
+                setTimeout(() => {
+                    btnElement.innerHTML = origHTML;
+                    btnElement.disabled = false;
+                }, 2000);
+            }
+        }
+    }
 </script>
+
+<div id="toast-notice" class="toast-notice"></div>
 
 </body>
 </html>
