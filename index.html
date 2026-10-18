@@ -1,3 +1,18 @@
+<!--
+/*
+ * Copyright (C) 2026 [GEORGE PETRAKIS]
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ */
+-->
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -248,11 +263,60 @@
         .modal-theme-btn:hover { background: var(--btn-base-hover); }
 
         .modal-credit {
-            margin-top: 25px; margin-bottom: 25px;
+            margin-top: 20px; margin-bottom: 12px;
             padding-top: 15px; border-top: 1px solid var(--border-color);
         }
         .credit-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-        .credit-name { font-size: 14px; font-weight: bold; color: var(--highlight-color); margin-top: 5px; font-family: 'Segoe UI', sans-serif;}
+        .credit-name { font-size: 14px; font-weight: bold; color: var(--highlight-color); margin-top: 3px; font-family: 'Segoe UI', sans-serif;}
+
+        .modal-license {
+            margin: 12px 0 20px 0;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+        }
+        [data-theme="dark"] .modal-license {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .license-badge {
+            display: inline-block;
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .license-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+        .license-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.35;
+            margin-bottom: 6px;
+        }
+        .license-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--highlight-color);
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        .license-link:hover {
+            text-decoration: underline;
+            opacity: 0.85;
+        }
 
         .modal-close {
             background: var(--btn-action-bg); color: white;
@@ -652,11 +716,36 @@
             <div class="credit-name">George Petrakis</div>
         </div>
         
+        <div class="modal-license">
+            <span class="license-badge">GNU GPLv3</span>
+            <div class="license-title">Free &amp; Open Source Software</div>
+            <div class="license-desc">
+                This program is free software: you can redistribute it and/or modify it under the terms of the <strong>GNU General Public License v3</strong> (or later). Distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+            </div>
+            <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener noreferrer" class="license-link">
+                GNU General Public License v3.0 ↗
+            </a>
+        </div>
+        
         <button class="modal-close" onclick="closeSettings()">Close</button>
     </div>
 </div>
 
 <script>
+/*
+ * Copyright (C) 2026 [GEORGE PETRAKIS]
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ */
+
     // --- SMART FOCUS & KEYBOARD HELPER ---
     function focusCalculatorInput() {
         window.focus();
