@@ -466,6 +466,71 @@
             font-size: 12px;
         }
 
+        /* --- ARITHMETIC EXPRESSION STEPS (ΠΡΟΤΕΡΑΙΟΤΗΤΑ ΠΡΑΞΕΩΝ) --- */
+        .expr-card {
+            text-align: left;
+        }
+        .expr-formula-header {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--highlight-color);
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--border-color);
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+        .expr-steps-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 16px 18px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 19px;
+            line-height: 1.35;
+            white-space: pre;
+            overflow-x: auto;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.03);
+            -webkit-overflow-scrolling: touch;
+        }
+        .expr-line {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .bracket-line {
+            color: #d97706;
+            font-weight: bold;
+        }
+        [data-theme="dark"] .bracket-line {
+            color: #fbbf24;
+        }
+        .expr-res-highlight {
+            color: #16a34a;
+            font-weight: 800;
+            text-shadow: 0 0 1px rgba(22, 163, 74, 0.3);
+        }
+        [data-theme="dark"] .expr-res-highlight {
+            color: #4ade80;
+            text-shadow: 0 0 1px rgba(74, 222, 128, 0.3);
+        }
+        .expr-approx {
+            color: var(--text-muted);
+            font-weight: normal;
+            font-size: 0.9em;
+        }
+        .expr-final-line {
+            font-weight: 700;
+            color: var(--highlight-color);
+            font-size: 21px;
+            margin-top: 4px;
+        }
+        .expr-summary-section {
+            margin-top: 16px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
 
         .vmul-grid { display: grid; justify-content: center; font-family: 'Consolas', 'Courier New', monospace; font-size: 24px; color: var(--text-main); column-gap: 0.1ch; row-gap: 2px; width: fit-content; margin: 0 auto; }
         .grid-cell { width: 1.5ch; text-align: center; position: relative; height: 1.5em; display: flex; align-items: center; justify-content: center; }
@@ -574,7 +639,7 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v0.59 beta</div>
+        <div class="modal-version">v0.9 beta_2026_10_18</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
@@ -1741,6 +1806,664 @@
         return "";
     }
 
+    // =========================================================================
+    // --- ΕΠΙΛΥΣΗ ΑΡΙΘΜΗΤΙΚΗΣ ΠΑΡΑΣΤΑΣΗΣ (ΒΗΜΑ-ΒΗΜΑ ΜΕ ΥΠΟΑΓΚΥΛΕΣ & MONOSPACE) ---
+    // =========================================================================
+
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    class ExprFraction {
+        constructor(n, d = 1n) {
+            if (typeof n === "number") n = BigInt(Math.round(n));
+            if (typeof d === "number") d = BigInt(Math.round(d));
+            if (d === 0n) throw new Error("Διαίρεση με το μηδέν");
+            if (d < 0n) { n = -n; d = -d; }
+            const g = ExprFraction.gcd(n < 0n ? -n : n, d);
+            this.n = n / g;
+            this.d = d / g;
+        }
+        static gcd(a, b) {
+            while (b !== 0n) {
+                let t = b;
+                b = a % b;
+                a = t;
+            }
+            return a;
+        }
+        add(other) { return new ExprFraction(this.n * other.d + other.n * this.d, this.d * other.d); }
+        sub(other) { return new ExprFraction(this.n * other.d - other.n * this.d, this.d * other.d); }
+        mul(other) { return new ExprFraction(this.n * other.n, this.d * other.d); }
+        div(other) { 
+            if (other.n === 0n) throw new Error("Διαίρεση με το μηδέν");
+            return new ExprFraction(this.n * other.d, this.d * other.n); 
+        }
+        pow(exp) {
+            let e = Number(exp);
+            if (e >= 0) return new ExprFraction(this.n ** BigInt(e), this.d ** BigInt(e));
+            return new ExprFraction(this.d ** BigInt(-e), this.n ** BigInt(-e));
+        }
+        isInteger() { return this.d === 1n; }
+        isTerminating() {
+            let d = this.d;
+            while (d % 2n === 0n) d /= 2n;
+            while (d % 5n === 0n) d /= 5n;
+            return d === 1n;
+        }
+        toDecimalString(maxDecimals = 4) {
+            let sign = this.n < 0n ? "-" : "";
+            let absN = this.n < 0n ? -this.n : this.n;
+            let intPart = absN / this.d;
+            let rem = absN % this.d;
+            if (rem === 0n) return sign + intPart.toString();
+            let dec = "";
+            for (let i = 0; i < maxDecimals && rem !== 0n; i++) {
+                rem *= 10n;
+                dec += (rem / this.d).toString();
+                rem %= this.d;
+            }
+            return sign + intPart.toString() + "," + dec;
+        }
+        format(preferDecimalIfTerminating = false) {
+            if (this.d === 1n) return this.n.toString();
+            if (preferDecimalIfTerminating && this.isTerminating() && this.d <= 1000n) {
+                return this.toDecimalString();
+            }
+            return `${this.n}/${this.d}`;
+        }
+    }
+
+    function preprocessLatexForExpr(latex) {
+        let s = latex.replace(/\\left/g, "").replace(/\\right/g, "");
+        s = s.replace(/(\d+)\s*\\frac\{([^}]+)\}\{([^}]+)\}/g, "($1 + \\frac{$2}{$3})");
+        
+        while (s.includes("\\frac")) {
+            let i = s.indexOf("\\frac");
+            let startNum = s.indexOf("{", i);
+            if (startNum === -1) break;
+            let [num, endNum] = extractBalancedBlock(s, startNum);
+            let startDen = s.indexOf("{", endNum);
+            if (startDen === -1) break;
+            let [den, endDen] = extractBalancedBlock(s, startDen);
+            let numClean = num.trim();
+            let denClean = den.trim();
+            let replacement;
+            if (/^-?\d+([.,]\d+)?$/.test(numClean) && /^-?\d+([.,]\d+)?$/.test(denClean)) {
+                replacement = `${numClean}/${denClean}`;
+            } else {
+                replacement = `((${numClean}):(${denClean}))`;
+            }
+            s = s.substring(0, i) + replacement + s.substring(endDen);
+        }
+        s = s.replace(/\^{([^}]+)}/g, "^$1");
+        s = s.replace(/(\d+)\s*\(/g, "$1 · (");
+        s = s.replace(/\)\s*\(/g, ") · (");
+        s = s.replace(/\)\s*(\d+)/g, ") · $1");
+        return s;
+    }
+
+    function tokenizeArithmeticExpr(expr) {
+        let s = expr
+            .replace(/\\cdot/g, " · ")
+            .replace(/\\times/g, " · ")
+            .replace(/\*/g, " · ")
+            .replace(/\\div/g, " : ")
+            .replace(/:/g, " : ")
+            .replace(/\+/g, " + ")
+            .replace(/-/g, " - ")
+            .replace(/\^/g, " ^ ")
+            .replace(/\(/g, " ( ")
+            .replace(/\)/g, " ) ")
+            .replace(/\[/g, " ( ")
+            .replace(/\]/g, " ) ")
+            .replace(/\{/g, " ( ")
+            .replace(/\}/g, " ) ")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        let rawTokens = s.split(" ").filter(t => t.length > 0);
+        let tokens = [];
+        let hasDecimals = false;
+        let hasFractions = false;
+
+        for (let i = 0; i < rawTokens.length; i++) {
+            let t = rawTokens[i];
+            if (t === "(") {
+                tokens.push({ type: "openParen", text: "(" });
+            } else if (t === ")") {
+                tokens.push({ type: "closeParen", text: ")" });
+            } else if (["+", "-", "·", ":", "^"].includes(t)) {
+                let prev = tokens.length > 0 ? tokens[tokens.length - 1] : null;
+                if (t === "-" && (!prev || prev.type === "openParen" || prev.type === "op")) {
+                    let next = rawTokens[i + 1];
+                    if (next && next !== "(") {
+                        i++;
+                        let val = parseVal("-" + next);
+                        tokens.push({ type: "number", val, text: "-" + next });
+                        continue;
+                    }
+                }
+                tokens.push({ type: "op", text: t });
+            } else {
+                if (t.includes(",") || t.includes(".")) hasDecimals = true;
+                if (t.includes("/")) hasFractions = true;
+                let val = parseVal(t);
+                tokens.push({ type: "number", val, text: t.replace(".", ",") });
+            }
+        }
+
+        function parseVal(str) {
+            if (str.includes("/")) {
+                let [num, den] = str.split("/");
+                return new ExprFraction(BigInt(num), BigInt(den));
+            }
+            if (str.includes(",") || str.includes(".")) {
+                let norm = str.replace(",", ".");
+                let parts = norm.split(".");
+                let isNeg = parts[0].startsWith("-");
+                let intPart = parts[0].replace("-", "");
+                let decPart = parts[1] || "";
+                let intVal = BigInt(intPart + decPart);
+                if (isNeg) intVal = -intVal;
+                let den = 10n ** BigInt(decPart.length);
+                return new ExprFraction(intVal, den);
+            }
+            return new ExprFraction(BigInt(str), 1n);
+        }
+
+        return { tokens, hasDecimals, hasFractions };
+    }
+
+    function renderTokensForExpr(tokens, isFirst = true, highlightIdx = -1) {
+        let prefix = isFirst ? "  " : "= ";
+        let plain = prefix;
+        let html = prefix;
+        let richHtml = prefix;
+        let positions = [];
+        for (let i = 0; i < tokens.length; i++) {
+            let tok = tokens[i];
+            let sp = tok.leftSpace > 0 ? " ".repeat(tok.leftSpace) : "";
+            plain += sp;
+            html += sp;
+            richHtml += sp;
+
+            let charStart = plain.length;
+            let padTotal = Math.max(0, (tok.width || tok.text.length) - tok.text.length);
+            let padL = Math.floor(padTotal / 2);
+            let padR = padTotal - padL;
+            let padLStr = " ".repeat(padL);
+            let padRStr = " ".repeat(padR);
+
+            plain += padLStr + tok.text + padRStr;
+            let charEnd = plain.length;
+            let textStart = charStart + padL;
+            let textEnd = textStart + tok.text.length;
+
+            let escaped = escapeHtml(tok.text);
+            if (i === highlightIdx) {
+                html += padLStr + `<span class="expr-res-highlight">${escaped}</span>` + padRStr;
+                richHtml += padLStr + `<span style="color: #16a34a; font-weight: bold;">${escaped}</span>` + padRStr;
+            } else {
+                html += padLStr + escaped + padRStr;
+                richHtml += padLStr + escaped + padRStr;
+            }
+
+            positions.push({
+                charStart,
+                charEnd,
+                textStart,
+                textEnd,
+                start: charStart,
+                end: charEnd
+            });
+        }
+        return { plain, html, richHtml, positions };
+    }
+
+    function makeBracketLine(start, width, targetCenter = null) {
+        if (width <= 1) {
+            return " ".repeat(start) + "┬";
+        }
+        if (width === 2) {
+            return " ".repeat(start) + "└┘";
+        }
+        let barsTotal = width - 3;
+        let mid = Math.floor(barsTotal / 2);
+        if (targetCenter !== null && barsTotal > 0) {
+            let offsetInBracket = targetCenter - (start + 1);
+            let clampedOffset = Math.max(0, Math.min(barsTotal, offsetInBracket));
+            mid = clampedOffset;
+        }
+        let leftBar = "─".repeat(mid);
+        let rightBar = "─".repeat(barsTotal - mid);
+        return " ".repeat(start) + "└" + leftBar + "┬" + rightBar + "┘";
+    }
+
+    function solveArithmeticExpression(latexInput) {
+        if (latexInput.includes("=") || latexInput.includes("D-DIV") || latexInput.includes("E-DIV") || 
+            latexInput.includes("V-MUL") || latexInput.includes("LCM") || latexInput.includes("GCD") || 
+            latexInput.includes("FACTORS") || latexInput.includes("DIVs")) {
+            return null;
+        }
+
+        let clean = preprocessLatexForExpr(latexInput);
+        let { tokens, hasDecimals, hasFractions } = tokenizeArithmeticExpr(clean);
+        
+        let numberTokens = tokens.filter(t => t.type === "number");
+        if (numberTokens.length <= 2) {
+            return null;
+        }
+
+        tokens = tokens.map((t, idx) => ({
+            ...t,
+            width: t.text.length,
+            leftSpace: idx === 0 ? 0 : 1
+        }));
+        for (let i = 1; i < tokens.length; i++) {
+            let prev = tokens[i - 1];
+            let t = tokens[i];
+            if (prev.type === "openParen" || t.type === "closeParen") {
+                t.leftSpace = 0;
+            } else {
+                t.leftSpace = 1;
+            }
+        }
+
+        let originalRender = renderTokensForExpr(tokens, true, -1);
+        let originalFormatted = originalRender.plain.trim();
+
+        let steps = [];
+        let isFirst = true;
+        let highlightIdx = -1;
+        let loopGuard = 0;
+
+        while (loopGuard++ < 60) {
+            let ops = tokens.filter(t => t.type === "op");
+            if (ops.length === 0) {
+                if (tokens.length === 3 && tokens[0].type === "openParen" && tokens[2].type === "closeParen") {
+                    let w = Math.max(tokens[1].width || tokens[1].text.length, (tokens[0].width || 1) + (tokens[1].width || tokens[1].text.length) + (tokens[2].width || 1));
+                    tokens = [{
+                        ...tokens[1],
+                        width: w,
+                        leftSpace: tokens[0].leftSpace
+                    }];
+                }
+                break;
+            }
+
+            let currentRender = renderTokensForExpr(tokens, isFirst, highlightIdx);
+
+            let parenRanges = [];
+            let openIndices = [];
+            for (let i = 0; i < tokens.length; i++) {
+                if (tokens[i].type === "openParen") openIndices.push(i);
+                else if (tokens[i].type === "closeParen" && openIndices.length > 0) {
+                    let op = openIndices.pop();
+                    parenRanges.push({ start: op, end: i });
+                }
+            }
+
+            let targetRange = null;
+            let isInsideParen = false;
+            let singleOpInParen = false;
+
+            if (parenRanges.length > 0) {
+                let innermost = parenRanges.find(p => !parenRanges.some(other => other !== p && other.start > p.start && other.end < p.end));
+                targetRange = innermost;
+                isInsideParen = true;
+            }
+
+            let searchStart = targetRange ? targetRange.start + 1 : 0;
+            let searchEnd = targetRange ? targetRange.end - 1 : tokens.length - 1;
+
+            if (isInsideParen) {
+                let innerOps = tokens.slice(searchStart, searchEnd + 1).filter(t => t.type === "op");
+                if (innerOps.length === 0) {
+                    let pStart = currentRender.positions[targetRange.start].charStart;
+                    let pEnd = currentRender.positions[targetRange.end].charEnd;
+                    let collapsedWidth = Math.max(tokens[targetRange.start + 1].width || tokens[targetRange.start + 1].text.length, pEnd - pStart);
+                    tokens.splice(targetRange.start, targetRange.end - targetRange.start + 1, {
+                        ...tokens[targetRange.start + 1],
+                        width: collapsedWidth,
+                        leftSpace: tokens[targetRange.start].leftSpace
+                    });
+                    continue;
+                }
+                if (innerOps.length === 1) {
+                    singleOpInParen = true;
+                }
+            }
+
+            let bestOpIdx = -1;
+            // Priority 1: ^
+            for (let i = searchStart; i <= searchEnd; i++) {
+                if (tokens[i].type === "op" && tokens[i].text === "^") {
+                    bestOpIdx = i; break;
+                }
+            }
+            // Priority 2: · or :
+            if (bestOpIdx === -1) {
+                for (let i = searchStart; i <= searchEnd; i++) {
+                    if (tokens[i].type === "op" && (tokens[i].text === "·" || tokens[i].text === ":")) {
+                        bestOpIdx = i; break;
+                    }
+                }
+            }
+            // Priority 3: + or -
+            if (bestOpIdx === -1) {
+                for (let i = searchStart; i <= searchEnd; i++) {
+                    if (tokens[i].type === "op" && (tokens[i].text === "+" || tokens[i].text === "-")) {
+                        bestOpIdx = i; break;
+                    }
+                }
+            }
+
+            if (bestOpIdx === -1) break;
+
+            let leftTokenIdx = bestOpIdx - 1;
+            let rightTokenIdx = bestOpIdx + 1;
+            let leftTok = tokens[leftTokenIdx];
+            let rightTok = tokens[rightTokenIdx];
+            let opTok = tokens[bestOpIdx];
+
+            if (!leftTok || !rightTok || leftTok.type !== "number" || rightTok.type !== "number") {
+                break;
+            }
+
+            let resVal;
+            if (opTok.text === "+") resVal = leftTok.val.add(rightTok.val);
+            else if (opTok.text === "-") resVal = leftTok.val.sub(rightTok.val);
+            else if (opTok.text === "·") resVal = leftTok.val.mul(rightTok.val);
+            else if (opTok.text === ":") resVal = leftTok.val.div(rightTok.val);
+            else if (opTok.text === "^") resVal = leftTok.val.pow(Number(rightTok.val.n));
+
+            let resText = resVal.format(hasDecimals);
+
+            let bracketTokenStart = leftTokenIdx;
+            let bracketTokenEnd = rightTokenIdx;
+            let spliceStart = leftTokenIdx;
+            let spliceCount = 3;
+
+            if (singleOpInParen && targetRange) {
+                bracketTokenStart = targetRange.start;
+                bracketTokenEnd = targetRange.end;
+                spliceStart = targetRange.start;
+                spliceCount = (targetRange.end - targetRange.start) + 1;
+            }
+
+            let charStart = currentRender.positions[bracketTokenStart].charStart;
+            let charEnd = currentRender.positions[bracketTokenEnd].charEnd;
+            let charWidth = charEnd - charStart;
+
+            let mergedWidth = Math.max(charWidth, resText.length);
+            let padTotal = mergedWidth - resText.length;
+            let padL = Math.floor(padTotal / 2);
+            let targetCenter = charStart + padL + Math.floor((resText.length - 1) / 2);
+
+            let bLine = makeBracketLine(charStart, charWidth, targetCenter);
+
+            steps.push({
+                exprLine: currentRender.plain,
+                exprHtml: currentRender.html,
+                exprRichHtml: currentRender.richHtml,
+                bracketLine: bLine
+            });
+
+            let nextTokens = [...tokens];
+            nextTokens.splice(spliceStart, spliceCount, {
+                type: "number",
+                val: resVal,
+                text: resText,
+                width: mergedWidth,
+                leftSpace: tokens[bracketTokenStart].leftSpace
+            });
+
+            tokens = nextTokens;
+            highlightIdx = spliceStart;
+            isFirst = false;
+        }
+
+        if (steps.length === 0) return null;
+
+        let finalRender = renderTokensForExpr(tokens, false, 0);
+        let finalTok = tokens[0];
+        let finalLinePlain = finalRender.plain;
+        let finalLineHtml = finalRender.html;
+        let finalLineRichHtml = finalRender.richHtml;
+        if (!finalTok.val.isInteger() && !finalTok.val.isTerminating()) {
+            let approx = `  (≈ ${finalTok.val.toDecimalString(3)})`;
+            finalLinePlain += approx;
+            finalLineHtml += `<span class="expr-approx">${escapeHtml(approx)}</span>`;
+            finalLineRichHtml += `<span style="color: #64748b;">${escapeHtml(approx)}</span>`;
+        }
+        steps.push({
+            exprLine: finalLinePlain,
+            exprHtml: finalLineHtml,
+            exprRichHtml: finalLineRichHtml,
+            isFinal: true
+        });
+
+        let plainLines = [];
+        let richLines = [];
+        steps.forEach(st => {
+            plainLines.push(st.exprLine);
+            richLines.push(st.exprRichHtml);
+            if (st.bracketLine) {
+                plainLines.push(st.bracketLine);
+                richLines.push(`<span style="color: #d97706; font-weight: bold;">${escapeHtml(st.bracketLine)}</span>`);
+            }
+        });
+        let textRepresentation = plainLines.join("\n");
+        let richHtmlRepresentation = `<pre style="font-family: 'Courier New', 'Liberation Mono', 'DejaVu Sans Mono', Consolas, monospace; font-size: 11pt; line-height: 1.35; color: #1e293b; background-color: #ffffff; white-space: pre; margin: 0; padding: 4px;">${richLines.join("\n")}</pre>`;
+
+        return {
+            steps,
+            finalVal: finalTok.val,
+            originalFormatted,
+            textRepresentation,
+            richHtmlRepresentation
+        };
+    }
+
+    function generateExpressionSummaryHtml(finalVal) {
+        let num = finalVal.n;
+        let den = finalVal.d;
+        let isNegative = (num < 0n);
+        let sign = isNegative ? "-" : "";
+        let absNum = isNegative ? -num : num;
+        let absDen = den;
+
+        let html = '<div style="display:flex; flex-direction:column; gap:0;">';
+
+        if (absDen === 1n) {
+            let valStr = absNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            html += `
+                <div class="std-result-row" style="border:none;">
+                    <span class="label">Αποτέλεσμα:</span>
+                    <span class="prefix"></span>
+                    <span class="value">${sign}${valStr}</span>
+                </div>`;
+        } else {
+            let fracHTML = renderFraction(Number(num), Number(den), sign);
+            html += `
+                <div class="std-result-row">
+                    <span class="label">Κλάσμα:</span>
+                    <span class="prefix"></span>
+                    <div style="display:flex; align-items:center;">${fracHTML}</div>
+                </div>`;
+
+            let mixedHTML = "-";
+            if (absNum > absDen) {
+                const whole = absNum / absDen;
+                const rem = absNum % absDen;
+                mixedHTML = `<span class="value">${sign}${whole} <div class="fraction-render"><span class="frac-top">${rem}</span><span class="frac-bottom">${absDen}</span></div></span>`;
+            } else {
+                mixedHTML = fracHTML;
+            }
+            html += `
+                <div class="std-result-row">
+                    <span class="label">Μικτός:</span>
+                    <span class="prefix"></span>
+                    ${mixedHTML}
+                </div>`;
+
+            let decFormatted;
+            if (finalVal.isTerminating()) {
+                decFormatted = finalVal.toDecimalString(6);
+            } else {
+                decFormatted = "≈ " + finalVal.toDecimalString(4) + "...";
+            }
+
+            html += `
+                <div class="std-result-row" style="border:none;">
+                    <span class="label">Δεκαδικός:</span>
+                    <span class="prefix"></span>
+                    <span class="value">${decFormatted}</span>
+                </div>`;
+        }
+
+        html += '</div>';
+        return html;
+    }
+
+    function generateExpressionVisual(solution) {
+        window.currentExpressionText = solution.textRepresentation;
+        window.currentExpressionRichHtml = solution.richHtmlRepresentation;
+
+        let stepsHtml = solution.steps.map(step => {
+            let lineClass = step.isFinal ? "expr-final-line" : "expr-line";
+            let h = `<div class="${lineClass}">${step.exprHtml}</div>`;
+            if (step.bracketLine) {
+                h += `<div class="bracket-line">${escapeHtml(step.bracketLine)}</div>`;
+            }
+            return h;
+        }).join("");
+
+        let summaryHtml = generateExpressionSummaryHtml(solution.finalVal);
+
+        return `
+            <div class="calc-action-bar" style="gap: 8px;">
+                <button class="btn-copy-img" onclick="copyVisualAsImage('printable-expr', this)" title="Αντιγραφή πράξης ως εικόνα στο πρόχειρο (PNG)">
+                    <span>📷</span> <span>Αντιγραφή ως Εικόνα</span>
+                </button>
+                <button class="btn-copy-img" onclick="copyExpressionAsText(this)" title="Αντιγραφή βημάτων ως κείμενο monospace (έτοιμο για LibreOffice Writer / Word)">
+                    <span>📋</span> <span>Αντιγραφή ως Κείμενο</span>
+                </button>
+            </div>
+            <div id="printable-expr" class="printable-calc-card expr-card">
+                <div class="expr-formula-header">
+                    ${escapeHtml(solution.originalFormatted)}
+                </div>
+                <div class="expr-steps-box" id="expr-steps-box">
+                    ${stepsHtml}
+                </div>
+                <div class="expr-summary-section">
+                    ${summaryHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    async function copyExpressionAsText(btnElement) {
+        if (!window.currentExpressionText) return;
+        const origHTML = btnElement ? btnElement.innerHTML : '';
+        const plainText = window.currentExpressionText;
+        const richHtml = window.currentExpressionRichHtml || `<pre style="font-family: 'Courier New', 'Liberation Mono', 'DejaVu Sans Mono', Consolas, monospace; font-size: 11pt; line-height: 1.35; white-space: pre;">${escapeHtml(plainText)}</pre>`;
+        
+        let copied = false;
+        
+        // 1. Δοκιμή με σύγχρονο ClipboardItem (text/plain & text/html) για LibreOffice Writer, MS Word, κτλ.
+        if (navigator.clipboard && navigator.clipboard.write) {
+            try {
+                const textBlob = new Blob([plainText], { type: 'text/plain' });
+                const htmlBlob = new Blob([richHtml], { type: 'text/html' });
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        'text/plain': textBlob,
+                        'text/html': htmlBlob
+                    })
+                ]);
+                copied = true;
+            } catch (err) {
+                console.warn("Async clipboard HTML write failed, trying fallback:", err);
+            }
+        }
+
+        // 2. Fallback με copy event listener και setData (text/html & text/plain)
+        if (!copied) {
+            try {
+                const listener = (e) => {
+                    e.clipboardData.setData('text/html', richHtml);
+                    e.clipboardData.setData('text/plain', plainText);
+                    e.preventDefault();
+                };
+                document.addEventListener('copy', listener);
+                copied = document.execCommand('copy');
+                document.removeEventListener('copy', listener);
+            } catch (e2) {
+                console.warn("execCommand copy listener fallback failed:", e2);
+            }
+        }
+
+        // 3. Fallback μόνο με text/plain μέσω writeText
+        if (!copied && navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(plainText);
+                copied = true;
+            } catch (e3) {
+                console.warn("writeText fallback failed:", e3);
+            }
+        }
+
+        // 4. Fallback με κρυφό textarea
+        if (!copied) {
+            fallbackCopyText(plainText, btnElement, origHTML);
+            return;
+        }
+
+        if (btnElement) {
+            btnElement.innerHTML = '<span>✅</span> <span>Αντιγράφηκε!</span>';
+            btnElement.classList.add('btn-copy-success');
+            setTimeout(() => {
+                btnElement.innerHTML = origHTML;
+                btnElement.classList.remove('btn-copy-success');
+            }, 2200);
+        }
+        showToastNotification('📋 Αντιγράφηκε με γραμματοσειρά Monospace (έτοιμο για LibreOffice Writer / Word)!');
+    }
+
+    function fallbackCopyText(text, btnElement, origHTML) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            if (btnElement) {
+                btnElement.innerHTML = '<span>✅</span> <span>Αντιγράφηκε!</span>';
+                btnElement.classList.add('btn-copy-success');
+                setTimeout(() => {
+                    btnElement.innerHTML = origHTML;
+                    btnElement.classList.remove('btn-copy-success');
+                }, 2000);
+            }
+            showToastNotification('📋 Αντιγράφηκε με γραμματοσειρά Monospace (έτοιμο για LibreOffice Writer / Word)!');
+        } catch (e) {
+            showToastNotification('❌ Αποτυχία αντιγραφής κειμένου');
+        }
+        document.body.removeChild(textArea);
+    }
+
     // --- ΚΥΡΙΑ ΣΥΝΑΡΤΗΣΗ CALCULATE ---
     function calculate(isHistoryReplay = false) {
         let latex = mathField.latex();
@@ -1934,15 +2657,38 @@
                     let tags = data.map(d => `<span class="divisor-tag">${d}</span>`).join(" ");
                     contentEl.innerHTML = `<div class="divisors-list">${tags}</div>`;
                 } else {
-                    titleEl.innerText = "Result";
-                    displayNumericResult(result, contentEl, "", simpInfo);
-                    
-                    const f = math.fraction(result);
-                    if (f.d === 1) {
-                        lastAns = (f.s * f.n).toString();
+                    let exprSolution = null;
+                    if (!isLCM && !isGCD && !isFactors && !isDivisors && !runEuclidean && !runVMul && !runDDiv) {
+                        try {
+                            exprSolution = solveArithmeticExpression(latex);
+                        } catch (exprErr) {
+                            console.warn("Expression solver fallback:", exprErr);
+                            exprSolution = null;
+                        }
+                    }
+
+                    if (exprSolution && exprSolution.steps && exprSolution.steps.length >= 2) {
+                        titleEl.innerText = "Αριθμητική Παράσταση (Προτεραιότητα Πράξεων)";
+                        contentEl.innerHTML = generateExpressionVisual(exprSolution);
+
+                        if (exprSolution.finalVal.d === 1n) {
+                            lastAns = exprSolution.finalVal.n.toString();
+                        } else {
+                            let sign = exprSolution.finalVal.n < 0n ? "-" : "";
+                            let absN = exprSolution.finalVal.n < 0n ? -exprSolution.finalVal.n : exprSolution.finalVal.n;
+                            lastAns = sign + "\\frac{" + absN.toString() + "}{" + exprSolution.finalVal.d.toString() + "}";
+                        }
                     } else {
-                        let sign = f.s === -1 ? "-" : "";
-                        lastAns = sign + "\\frac{" + f.n + "}{" + f.d + "}";
+                        titleEl.innerText = "Result";
+                        displayNumericResult(result, contentEl, "", simpInfo);
+                        
+                        const f = math.fraction(result);
+                        if (f.d === 1) {
+                            lastAns = (f.s * f.n).toString();
+                        } else {
+                            let sign = f.s === -1 ? "-" : "";
+                            lastAns = sign + "\\frac{" + f.n + "}{" + f.d + "}";
+                        }
                     }
                 }
             }
