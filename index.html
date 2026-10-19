@@ -164,9 +164,23 @@
             color: var(--text-main);
             min-height: 60px; display: flex; align-items: center; 
             position: relative; z-index: 1;
+            overflow: hidden;
+            box-sizing: border-box;
         }
         .mq-math-mode { color: var(--text-main); }
         .mq-root-block { color: var(--text-main); }
+        #math-input .mq-root-block {
+            min-width: 0;
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        #math-input .mq-root-block::-webkit-scrollbar {
+            display: none;
+        }
         
         .history-hint { 
             font-size: 11px; 
@@ -703,7 +717,7 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v0.9 beta_2026_10_18</div>
+        <div class="modal-version">v0.91 beta_2026_10_19</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
@@ -1714,10 +1728,100 @@
         return { visual: gridHtml };
     }
 
+    function scrollFieldToCursor() {
+        if (!window.mathField) return;
+        
+        const doScroll = () => {
+            try {
+                const mathInput = document.getElementById('math-input');
+                if (mathInput && mathInput.scrollLeft !== 0) {
+                    mathInput.scrollLeft = 0;
+                }
+                
+                const rootBlock = document.querySelector('#math-input .mq-root-block');
+                if (!rootBlock) return;
+                
+                const ctrlr = window.mathField.__controller;
+                const cursor = ctrlr ? ctrlr.cursor : null;
+                const rootRect = rootBlock.getBoundingClientRect();
+                
+                const cursorLeft = cursor ? cursor[-1] : null;
+                const cursorRight = cursor ? cursor[1] : null;
+                
+                let targetX = null;
+                
+                // 1. Έλεγχος αν υπάρχει ορατό DOM στοιχείο κέρσορα (.mq-cursor)
+                const cursorEl = rootBlock.querySelector('.mq-cursor');
+                if (cursorEl && cursorEl.offsetParent !== null) {
+                    const cRect = cursorEl.getBoundingClientRect();
+                    targetX = cRect.left;
+                }
+                
+                // 2. Αν ο κέρσορας είναι αποσυνδεδεμένος (π.χ. mobile blur), υπολογίζουμε τη θέση
+                // από το στοιχείο αμέσως αριστερά ή δεξιά
+                if (targetX === null && cursor) {
+                    if (cursorLeft && cursorLeft.jQ && cursorLeft.jQ[0]) {
+                        const lRect = cursorLeft.jQ[0].getBoundingClientRect();
+                        targetX = lRect.right;
+                    } else if (cursorRight && cursorRight.jQ && cursorRight.jQ[0]) {
+                        const rRect = cursorRight.jQ[0].getBoundingClientRect();
+                        targetX = rRect.left;
+                    } else if (cursor.parent && cursor.parent.jQ && cursor.parent.jQ[0]) {
+                        const pRect = cursor.parent.jQ[0].getBoundingClientRect();
+                        targetX = pRect.left;
+                    }
+                }
+                
+                // 3. Αν ο κέρσορας είναι στο τέλος της παράστασης (όπως κατά την εισαγωγή αριθμών)
+                if (cursor && !cursorRight) {
+                    if (rootBlock.scrollWidth > rootBlock.clientWidth) {
+                        const targetScroll = rootBlock.scrollWidth - rootBlock.clientWidth + 30;
+                        $(rootBlock).stop().animate({ scrollLeft: targetScroll }, 60);
+                        return;
+                    } else {
+                        rootBlock.scrollLeft = 0;
+                        return;
+                    }
+                }
+                
+                // 4. Αν η παράσταση χωράει ολόκληρη, μηδενίζουμε την κύλιση
+                if (rootBlock.scrollWidth <= rootBlock.clientWidth) {
+                    rootBlock.scrollLeft = 0;
+                    return;
+                }
+                
+                // 5. Αναλογική κύλιση για εσωτερικό σημείο επεξεργασίας
+                if (targetX !== null) {
+                    const margin = 35;
+                    let scrollDelta = 0;
+                    
+                    if (targetX > rootRect.right - margin) {
+                        scrollDelta = targetX - (rootRect.right - margin) + 15;
+                    } else if (targetX < rootRect.left + margin) {
+                        scrollDelta = targetX - (rootRect.left + margin) - 15;
+                    }
+                    
+                    if (Math.abs(scrollDelta) > 1) {
+                        $(rootBlock).stop().animate({ scrollLeft: rootBlock.scrollLeft + scrollDelta }, 60);
+                    }
+                }
+            } catch (err) {
+                console.warn('scrollFieldToCursor error:', err);
+            }
+        };
+        
+        requestAnimationFrame(doScroll);
+        setTimeout(doScroll, 15);
+    }
+
     var MQ = MathQuill.getInterface(2);
     var mathField = MQ.MathField(document.getElementById('math-input'), {
         spaceBehavesLikeTab: true,
-        handlers: { edit: function() {} }
+        handlers: { 
+            edit: function() {
+                scrollFieldToCursor();
+            } 
+        }
     });
 
     $(document).ready(function() { 
@@ -1755,6 +1859,7 @@
         if (cmd === '/') mathField.cmd('\\frac');
         else mathField.cmd(cmd);
         smartFocus();
+        scrollFieldToCursor();
     }
     
     function insertTheory(name) {
@@ -1762,6 +1867,7 @@
         mathField.write('\\text{' + name + '}\\left(\\right)');
         mathField.keystroke('Left'); 
         smartFocus();
+        scrollFieldToCursor();
     }
     
     function insertAns() {
@@ -1773,6 +1879,7 @@
         }
         mathField.write(lastAns);
         smartFocus();
+        scrollFieldToCursor();
     }
 
     function clearInput() {
@@ -1782,6 +1889,11 @@
         currentDraft = ""; 
         justCalculated = false;
         smartFocus();
+        const rootBlock = document.querySelector('#math-input .mq-root-block');
+        if (rootBlock) {
+            $(rootBlock).stop();
+            rootBlock.scrollLeft = 0;
+        }
     }
 
     function formatPrimeFactors(factorsArray) {
