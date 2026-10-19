@@ -576,13 +576,22 @@
         .expr-line {
             font-weight: 600;
             color: var(--text-main);
+            margin: 4px 0;
+            line-height: 1.5;
         }
-        .bracket-line {
-            color: #d97706;
-            font-weight: bold;
+        .expr-op-target {
+            text-decoration: underline;
+            text-decoration-color: #dc2626;
+            -webkit-text-decoration-color: #dc2626;
+            text-decoration-thickness: 2.5px;
+            text-underline-offset: 4px;
         }
-        [data-theme="dark"] .bracket-line {
-            color: #fbbf24;
+        [data-theme="dark"] .expr-op-target {
+            text-decoration: underline;
+            text-decoration-color: #ef4444;
+            -webkit-text-decoration-color: #ef4444;
+            text-decoration-thickness: 2.5px;
+            text-underline-offset: 4px;
         }
         .expr-res-highlight {
             color: #16a34a;
@@ -602,7 +611,8 @@
             font-weight: 700;
             color: var(--highlight-color);
             font-size: 21px;
-            margin-top: 4px;
+            margin-top: 6px;
+            line-height: 1.5;
         }
         .expr-summary-section {
             margin-top: 16px;
@@ -717,7 +727,7 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v0.91 beta_2026_10_19</div>
+        <div class="modal-version">v0.92 beta_2026_10_19</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
@@ -2182,15 +2192,20 @@
         return { tokens, hasDecimals, hasFractions };
     }
 
-    function renderTokensForExpr(tokens, isFirst = true, highlightIdx = -1) {
+    function renderTokensForExpr(tokens, isFirst = true, prevResIdx = -1, nextOpRange = null) {
         let prefix = isFirst ? "  " : "= ";
         let plain = prefix;
         let html = prefix;
         let richHtml = prefix;
         let positions = [];
+
         for (let i = 0; i < tokens.length; i++) {
             let tok = tokens[i];
             let sp = tok.leftSpace > 0 ? " ".repeat(tok.leftSpace) : "";
+
+            let isStartOfTarget = nextOpRange && (i === nextOpRange.start);
+            let isEndOfTarget = nextOpRange && (i === nextOpRange.end);
+
             plain += sp;
             html += sp;
             richHtml += sp;
@@ -2204,47 +2219,38 @@
 
             plain += padLStr + tok.text + padRStr;
             let charEnd = plain.length;
-            let textStart = charStart + padL;
-            let textEnd = textStart + tok.text.length;
 
             let escaped = escapeHtml(tok.text);
-            if (i === highlightIdx) {
-                html += padLStr + `<span class="expr-res-highlight">${escaped}</span>` + padRStr;
-                richHtml += padLStr + `<span style="color: #16a34a; font-weight: bold;">${escaped}</span>` + padRStr;
+            let contentHtml = escaped;
+            let contentRich = escaped;
+
+            if (i === prevResIdx) {
+                contentHtml = `<span class="expr-res-highlight">${escaped}</span>`;
+                contentRich = `<span style="color: #16a34a; font-weight: bold;">${escaped}</span>`;
+            }
+
+            if (isStartOfTarget && isEndOfTarget) {
+                html += padLStr + `<span class="expr-op-target">${contentHtml}</span>` + padRStr;
+                richHtml += padLStr + `<span style="text-decoration: underline; text-decoration-color: #dc2626; -webkit-text-decoration-color: #dc2626; mso-text-underline-color: #dc2626; text-underline-offset: 3px;">${contentRich}</span>` + padRStr;
+            } else if (isStartOfTarget) {
+                html += padLStr + `<span class="expr-op-target">${contentHtml}` + padRStr;
+                richHtml += padLStr + `<span style="text-decoration: underline; text-decoration-color: #dc2626; -webkit-text-decoration-color: #dc2626; mso-text-underline-color: #dc2626; text-underline-offset: 3px;">${contentRich}` + padRStr;
+            } else if (isEndOfTarget) {
+                html += padLStr + `${contentHtml}</span>` + padRStr;
+                richHtml += padLStr + `${contentRich}</span>` + padRStr;
             } else {
-                html += padLStr + escaped + padRStr;
-                richHtml += padLStr + escaped + padRStr;
+                html += padLStr + contentHtml + padRStr;
+                richHtml += padLStr + contentRich + padRStr;
             }
 
             positions.push({
                 charStart,
                 charEnd,
-                textStart,
-                textEnd,
-                start: charStart,
-                end: charEnd
+                width: charEnd - charStart
             });
         }
-        return { plain, html, richHtml, positions };
-    }
 
-    function makeBracketLine(start, width, targetCenter = null) {
-        if (width <= 1) {
-            return " ".repeat(start) + "┬";
-        }
-        if (width === 2) {
-            return " ".repeat(start) + "└┘";
-        }
-        let barsTotal = width - 3;
-        let mid = Math.floor(barsTotal / 2);
-        if (targetCenter !== null && barsTotal > 0) {
-            let offsetInBracket = targetCenter - (start + 1);
-            let clampedOffset = Math.max(0, Math.min(barsTotal, offsetInBracket));
-            mid = clampedOffset;
-        }
-        let leftBar = "─".repeat(mid);
-        let rightBar = "─".repeat(barsTotal - mid);
-        return " ".repeat(start) + "└" + leftBar + "┬" + rightBar + "┘";
+        return { plain, html, richHtml, positions };
     }
 
     function solveArithmeticExpression(latexInput) {
@@ -2277,12 +2283,12 @@
             }
         }
 
-        let originalRender = renderTokensForExpr(tokens, true, -1);
+        let originalRender = renderTokensForExpr(tokens, true, -1, null);
         let originalFormatted = originalRender.plain.trim();
 
         let steps = [];
         let isFirst = true;
-        let highlightIdx = -1;
+        let prevResIdx = -1;
         let loopGuard = 0;
 
         while (loopGuard++ < 60) {
@@ -2299,7 +2305,8 @@
                 break;
             }
 
-            let currentRender = renderTokensForExpr(tokens, isFirst, highlightIdx);
+            // Measure positions for column preservation
+            let dummyRender = renderTokensForExpr(tokens, isFirst, prevResIdx, null);
 
             let parenRanges = [];
             let openIndices = [];
@@ -2327,8 +2334,8 @@
             if (isInsideParen) {
                 let innerOps = tokens.slice(searchStart, searchEnd + 1).filter(t => t.type === "op");
                 if (innerOps.length === 0) {
-                    let pStart = currentRender.positions[targetRange.start].charStart;
-                    let pEnd = currentRender.positions[targetRange.end].charEnd;
+                    let pStart = dummyRender.positions[targetRange.start].charStart;
+                    let pEnd = dummyRender.positions[targetRange.end].charEnd;
                     let collapsedWidth = Math.max(tokens[targetRange.start + 1].width || tokens[targetRange.start + 1].text.length, pEnd - pStart);
                     tokens.splice(targetRange.start, targetRange.end - targetRange.start + 1, {
                         ...tokens[targetRange.start + 1],
@@ -2387,34 +2394,29 @@
 
             let resText = resVal.format(hasDecimals);
 
-            let bracketTokenStart = leftTokenIdx;
-            let bracketTokenEnd = rightTokenIdx;
+            let targetStart = leftTokenIdx;
+            let targetEnd = rightTokenIdx;
             let spliceStart = leftTokenIdx;
             let spliceCount = 3;
 
             if (singleOpInParen && targetRange) {
-                bracketTokenStart = targetRange.start;
-                bracketTokenEnd = targetRange.end;
+                targetStart = targetRange.start;
+                targetEnd = targetRange.end;
                 spliceStart = targetRange.start;
                 spliceCount = (targetRange.end - targetRange.start) + 1;
             }
 
-            let charStart = currentRender.positions[bracketTokenStart].charStart;
-            let charEnd = currentRender.positions[bracketTokenEnd].charEnd;
+            let charStart = dummyRender.positions[targetStart].charStart;
+            let charEnd = dummyRender.positions[targetEnd].charEnd;
             let charWidth = charEnd - charStart;
-
             let mergedWidth = Math.max(charWidth, resText.length);
-            let padTotal = mergedWidth - resText.length;
-            let padL = Math.floor(padTotal / 2);
-            let targetCenter = charStart + padL + Math.floor((resText.length - 1) / 2);
 
-            let bLine = makeBracketLine(charStart, charWidth, targetCenter);
+            let currentRender = renderTokensForExpr(tokens, isFirst, prevResIdx, { start: targetStart, end: targetEnd });
 
             steps.push({
                 exprLine: currentRender.plain,
                 exprHtml: currentRender.html,
-                exprRichHtml: currentRender.richHtml,
-                bracketLine: bLine
+                exprRichHtml: currentRender.richHtml
             });
 
             let nextTokens = [...tokens];
@@ -2423,17 +2425,17 @@
                 val: resVal,
                 text: resText,
                 width: mergedWidth,
-                leftSpace: tokens[bracketTokenStart].leftSpace
+                leftSpace: tokens[targetStart].leftSpace
             });
 
             tokens = nextTokens;
-            highlightIdx = spliceStart;
+            prevResIdx = spliceStart;
             isFirst = false;
         }
 
         if (steps.length === 0) return null;
 
-        let finalRender = renderTokensForExpr(tokens, false, 0);
+        let finalRender = renderTokensForExpr(tokens, false, 0, null);
         let finalTok = tokens[0];
         let finalLinePlain = finalRender.plain;
         let finalLineHtml = finalRender.html;
@@ -2451,18 +2453,11 @@
             isFinal: true
         });
 
-        let plainLines = [];
-        let richLines = [];
-        steps.forEach(st => {
-            plainLines.push(st.exprLine);
-            richLines.push(st.exprRichHtml);
-            if (st.bracketLine) {
-                plainLines.push(st.bracketLine);
-                richLines.push(`<span style="color: #d97706; font-weight: bold;">${escapeHtml(st.bracketLine)}</span>`);
-            }
-        });
+        let plainLines = steps.map(st => st.exprLine);
+        let richLines = steps.map(st => st.exprRichHtml);
+
         let textRepresentation = plainLines.join("\n");
-        let richHtmlRepresentation = `<pre style="font-family: 'Courier New', 'Liberation Mono', 'DejaVu Sans Mono', Consolas, monospace; font-size: 11pt; line-height: 1.35; color: #1e293b; background-color: #ffffff; white-space: pre; margin: 0; padding: 4px;">${richLines.join("\n")}</pre>`;
+        let richHtmlRepresentation = `<pre style="font-family: 'Consolas', 'Courier New', monospace; font-size: 11pt; line-height: 1.5; color: #1e293b; background-color: #ffffff; white-space: pre; margin: 0; padding: 4px;">${richLines.join("\n")}</pre>`;
 
         return {
             steps,
@@ -2540,11 +2535,7 @@
 
         let stepsHtml = solution.steps.map(step => {
             let lineClass = step.isFinal ? "expr-final-line" : "expr-line";
-            let h = `<div class="${lineClass}">${step.exprHtml}</div>`;
-            if (step.bracketLine) {
-                h += `<div class="bracket-line">${escapeHtml(step.bracketLine)}</div>`;
-            }
-            return h;
+            return `<div class="${lineClass}">${step.exprHtml}</div>`;
         }).join("");
 
         let summaryHtml = generateExpressionSummaryHtml(solution.finalVal);
