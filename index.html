@@ -367,12 +367,25 @@
             display: flex;
             justify-content: flex-end;
             margin-bottom: 10px;
+            gap: 6px;
+        }
+        .calc-action-bar.expr-action-bar {
+            justify-content: space-between;
+            width: 100%;
+            flex-wrap: nowrap;
+        }
+        .calc-action-bar.expr-action-bar .btn-copy-img {
+            flex: 1 1 0;
+            justify-content: center;
+            padding: 7px 6px;
+            font-size: 12px;
+            min-width: 0;
         }
         .btn-copy-img {
             background: var(--btn-base-bg);
             color: var(--text-main);
             border: 1px solid var(--border-color);
-            padding: 7px 15px;
+            padding: 7px 14px;
             border-radius: 20px;
             font-size: 13px;
             font-weight: bold;
@@ -380,6 +393,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
             transition: all 0.2s ease;
             box-shadow: 0 2px 5px rgba(0,0,0,0.06);
             font-family: 'Segoe UI', sans-serif;
@@ -931,7 +945,7 @@
     <div class="presentation-modal-content" onclick="event.stopPropagation()">
         <div class="presentation-header">
             <div class="presentation-title-group">
-                <span class="presentation-badge">🏫 ΠΡΟΒΟΛΗ ΤΑΞΗΣ</span>
+                <span class="presentation-badge">⛶ ΠΛΗΡΗΣ ΟΘΟΝΗ</span>
                 <span class="presentation-title">Αριθμητική Παράσταση</span>
             </div>
             <div class="presentation-controls">
@@ -2755,15 +2769,15 @@
         let summaryHtml = generateExpressionSummaryHtml(solution.finalVal);
 
         return `
-            <div class="calc-action-bar" style="gap: 8px; flex-wrap: wrap;">
+            <div class="calc-action-bar expr-action-bar">
                 <button class="btn-copy-img" onclick="copyVisualAsImage('printable-expr', this)" title="Αντιγραφή πράξης ως εικόνα στο πρόχειρο (PNG)">
-                    <span>📷</span> <span>Αντιγραφή ως Εικόνα</span>
+                    <span>📷</span> <span>Αντιγρ. Εικόνας</span>
                 </button>
                 <button class="btn-copy-img" onclick="copyExpressionAsText(this)" title="Αντιγραφή βημάτων ως κείμενο monospace (έτοιμο για LibreOffice Writer / Word)">
-                    <span>📋</span> <span>Αντιγραφή ως Κείμενο</span>
+                    <span>📋</span> <span>Αντιγρ. Κειμένου</span>
                 </button>
-                <button class="btn-copy-img btn-pres-trigger" onclick="openClassroomPresentation()" title="Προβολή Τάξης (Πλήρης Οθόνη χωρίς οριζόντιο σκρολ)">
-                    <span>🏫</span> <span>Προβολή Τάξης</span>
+                <button class="btn-copy-img btn-pres-trigger" onclick="openClassroomPresentation()" title="Πλήρης Οθόνη (προβολή χωρίς οριζόντιο σκρολ)">
+                    <span>⛶</span> <span>Πλήρης Οθόνη</span>
                 </button>
             </div>
             <div id="printable-expr" class="printable-calc-card expr-card">
