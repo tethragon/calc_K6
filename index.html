@@ -620,6 +620,177 @@
             padding-top: 12px;
         }
 
+        /* --- CLASSROOM PRESENTATION MODE (Προσέγγιση Γ) --- */
+        .presentation-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 16px;
+            box-sizing: border-box;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .presentation-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .presentation-modal-content {
+            background: var(--bg-calc);
+            color: var(--text-main);
+            width: 96vw;
+            max-width: 1400px;
+            height: 92vh;
+            border-radius: 18px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.96);
+            transition: transform 0.25s ease;
+        }
+        .presentation-overlay.active .presentation-modal-content {
+            transform: scale(1);
+        }
+        .presentation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--card-bg);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .presentation-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .presentation-badge {
+            background: var(--highlight-color);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+        .presentation-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .presentation-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .pres-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--btn-base-bg);
+            color: var(--text-main);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        .pres-btn:hover {
+            background: var(--btn-base-hover);
+        }
+        .pres-btn:active {
+            transform: scale(0.96);
+        }
+        .pres-btn-action {
+            background: var(--btn-action-bg);
+            color: white;
+            border-color: transparent;
+        }
+        .pres-btn-action:hover {
+            filter: brightness(1.1);
+        }
+        .pres-btn-close {
+            background: #ef4444;
+            color: white;
+            border-color: transparent;
+            font-size: 16px;
+            padding: 6px 14px;
+        }
+        .pres-btn-close:hover {
+            background: #dc2626;
+        }
+        .presentation-body {
+            flex: 1;
+            overflow: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            -webkit-overflow-scrolling: touch;
+        }
+        .presentation-card {
+            width: 100%;
+            margin: 0 auto;
+            --pres-font-size: 24px;
+        }
+        .pres-formula-header {
+            text-align: center;
+            font-size: calc(var(--pres-font-size) * 1.05);
+            font-weight: bold;
+            color: var(--highlight-color);
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--border-color);
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+        .pres-steps-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: var(--pres-font-size);
+            line-height: 1.5;
+            white-space: pre;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+            width: fit-content;
+            min-width: 100%;
+            box-sizing: border-box;
+            overflow-x: auto;
+        }
+        .pres-summary-section {
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+            width: 100%;
+        }
+        .btn-pres-trigger {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+            color: white !important;
+            border: none !important;
+            font-weight: 700 !important;
+            box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+        }
+        .btn-pres-trigger:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
         .vmul-grid { display: grid; justify-content: center; font-family: 'Consolas', 'Courier New', monospace; font-size: 24px; color: var(--text-main); column-gap: 0.1ch; row-gap: 2px; width: fit-content; margin: 0 auto; }
         .grid-cell { width: 1.5ch; text-align: center; position: relative; height: 1.5em; display: flex; align-items: center; justify-content: center; }
         .grid-border { grid-column: 1 / -1; border-bottom: 3px solid var(--line-color); height: 5px; margin-bottom: 5px; }
@@ -727,7 +898,7 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v0.93 beta_2026_10_31</div>
+        <div class="modal-version">v0.95 beta_2026_10_31</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
@@ -752,6 +923,46 @@
         </div>
         
         <button class="modal-close" onclick="closeSettings()">Close</button>
+    </div>
+</div>
+
+<!-- CLASSROOM PRESENTATION MODAL (Προσέγγιση Γ) -->
+<div class="modal-overlay presentation-overlay" id="presentation-modal" onclick="closeClassroomPresentation(event)">
+    <div class="presentation-modal-content" onclick="event.stopPropagation()">
+        <div class="presentation-header">
+            <div class="presentation-title-group">
+                <span class="presentation-badge">🏫 ΠΡΟΒΟΛΗ ΤΑΞΗΣ</span>
+                <span class="presentation-title">Αριθμητική Παράσταση</span>
+            </div>
+            <div class="presentation-controls">
+                <button class="pres-btn" onclick="zoomPresentation(-1)" title="Μικρότερη γραμματοσειρά (A-)">
+                    <span>A-</span>
+                </button>
+                <button class="pres-btn" onclick="zoomPresentation(1)" title="Μεγαλύτερη γραμματοσειρά (A+)">
+                    <span>A+</span>
+                </button>
+                <button class="pres-btn" onclick="fitPresentationToScreen()" title="Προσαρμογή στο πλάτος οθόνης (Auto-Fit)">
+                    <span>↔ Προσαρμογή</span>
+                </button>
+                <button class="pres-btn" onclick="resetPresentationZoom()" title="Επαναφορά μεγέθους στο 100%">
+                    <span>100%</span>
+                </button>
+                <button class="pres-btn pres-btn-action" onclick="copyVisualAsImage('pres-card-content', this)" title="Αντιγραφή ως Εικόνα">
+                    <span>📷</span> <span>Εικόνα</span>
+                </button>
+                <button class="pres-btn pres-btn-action" onclick="copyExpressionAsText(this)" title="Αντιγραφή ως Κείμενο">
+                    <span>📋</span> <span>Κείμενο</span>
+                </button>
+                <button class="pres-btn pres-btn-close" onclick="closeClassroomPresentation()" title="Κλείσιμο Προβολής (Esc)">
+                    <span>✕</span>
+                </button>
+            </div>
+        </div>
+        <div class="presentation-body" id="presentation-body">
+            <div id="pres-card-content" class="presentation-card">
+                <!-- Περιεχόμενο παράστασης -->
+            </div>
+        </div>
     </div>
 </div>
 
@@ -2532,6 +2743,7 @@
     }
 
     function generateExpressionVisual(solution) {
+        window.currentExpressionSolution = solution;
         window.currentExpressionText = solution.textRepresentation;
         window.currentExpressionRichHtml = solution.richHtmlRepresentation;
 
@@ -2543,12 +2755,15 @@
         let summaryHtml = generateExpressionSummaryHtml(solution.finalVal);
 
         return `
-            <div class="calc-action-bar" style="gap: 8px;">
+            <div class="calc-action-bar" style="gap: 8px; flex-wrap: wrap;">
                 <button class="btn-copy-img" onclick="copyVisualAsImage('printable-expr', this)" title="Αντιγραφή πράξης ως εικόνα στο πρόχειρο (PNG)">
                     <span>📷</span> <span>Αντιγραφή ως Εικόνα</span>
                 </button>
                 <button class="btn-copy-img" onclick="copyExpressionAsText(this)" title="Αντιγραφή βημάτων ως κείμενο monospace (έτοιμο για LibreOffice Writer / Word)">
                     <span>📋</span> <span>Αντιγραφή ως Κείμενο</span>
+                </button>
+                <button class="btn-copy-img btn-pres-trigger" onclick="openClassroomPresentation()" title="Προβολή Τάξης (Πλήρης Οθόνη χωρίς οριζόντιο σκρολ)">
+                    <span>🏫</span> <span>Προβολή Τάξης</span>
                 </button>
             </div>
             <div id="printable-expr" class="printable-calc-card expr-card">
@@ -3077,12 +3292,63 @@
         try {
             const currentTheme = document.body.getAttribute('data-theme') || 'light';
             const bgColor = currentTheme === 'dark' ? '#1e1e1e' : '#ffffff';
+
+            // ΛΥΣΗ 1: Υπολογισμός πραγματικού πλήρους εύρους (scrollWidth) για αποφυγή αποκοπής
+            let fullWidth = el.scrollWidth;
+            el.querySelectorAll('*').forEach(child => {
+                if (child.scrollWidth > fullWidth) {
+                    fullWidth = child.scrollWidth;
+                }
+            });
+            // Προσθήκη μικρού περιθωρίου ασφαλείας
+            fullWidth = Math.ceil(fullWidth) + 36;
             
             const canvas = await html2canvas(el, {
                 backgroundColor: bgColor,
                 scale: 2, // 2x high resolution
                 logging: false,
-                useCORS: true
+                useCORS: true,
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: Math.max(document.documentElement.scrollWidth, fullWidth + 120),
+                onclone: (clonedDoc) => {
+                    const clonedEl = clonedDoc.getElementById(targetId);
+                    if (!clonedEl) return;
+                    
+                    // Επέκταση του στοιχείου και των εσωτερικών scrollable containers στο 100% του περιεχομένου
+                    clonedEl.style.width = fullWidth + 'px';
+                    clonedEl.style.maxWidth = 'none';
+                    clonedEl.style.overflow = 'visible';
+
+                    clonedEl.querySelectorAll('*').forEach(child => {
+                        if (child.classList.contains('expr-steps-box') || 
+                            child.classList.contains('pres-steps-box') || 
+                            child.classList.contains('long-div-container') ||
+                            child.classList.contains('ld-left-col') ||
+                            child.classList.contains('vmul-grid')) {
+                            child.style.overflow = 'visible';
+                            child.style.overflowX = 'visible';
+                            child.style.width = '100%';
+                            child.style.maxWidth = 'none';
+                        }
+                    });
+
+                    // ΛΥΣΗ 1: Μετατροπή της κόκκινης υπογράμμισης σε ακριβές border-bottom στο κλωνοποιημένο έγγραφο
+                    // Εξαλείφει τη μετατόπιση που προκαλεί το html2canvas στους nested spans με έντονη γραφή / κενά
+                    const underlineColor = currentTheme === 'dark' ? '#ef4444' : '#dc2626';
+                    clonedEl.querySelectorAll('.expr-op-target').forEach(target => {
+                        target.style.textDecoration = 'none';
+                        target.style.webkitTextDecoration = 'none';
+                        target.style.borderBottom = `2.5px solid ${underlineColor}`;
+                        target.style.paddingBottom = '1px';
+                        target.style.display = 'inline';
+
+                        target.querySelectorAll('*').forEach(child => {
+                            child.style.textDecoration = 'none';
+                            child.style.webkitTextDecoration = 'none';
+                        });
+                    });
+                }
             });
 
             canvas.toBlob(async (blob) => {
@@ -3142,6 +3408,98 @@
             }
         }
     }
+
+    // --- CLASSROOM PRESENTATION MODE (ΠΡΟΣΕΓΓΙΣΗ Γ) ---
+    let currentPresFontSize = 24;
+
+    function openClassroomPresentation() {
+        if (!window.currentExpressionSolution) return;
+        const solution = window.currentExpressionSolution;
+        const modal = document.getElementById('presentation-modal');
+        const card = document.getElementById('pres-card-content');
+        if (!modal || !card) return;
+
+        let stepsHtml = solution.steps.map(step => {
+            let lineClass = step.isFinal ? "expr-final-line" : "expr-line";
+            return `<div class="${lineClass}">${step.exprHtml}</div>`;
+        }).join("");
+
+        let summaryHtml = generateExpressionSummaryHtml(solution.finalVal);
+
+        card.innerHTML = `
+            <div class="pres-formula-header">
+                ${escapeHtml(solution.originalFormatted)}
+            </div>
+            <div class="pres-steps-box" id="pres-steps-box">
+                ${stepsHtml}
+            </div>
+            <div class="pres-summary-section">
+                ${summaryHtml}
+            </div>
+        `;
+
+        currentPresFontSize = 24;
+        card.style.setProperty('--pres-font-size', currentPresFontSize + 'px');
+        modal.classList.add('active');
+
+        // Αυτόματη προσαρμογή (Auto-Fit) για να χωράει μονοκόμματο χωρίς οριζόντιο σκρολ
+        requestAnimationFrame(() => {
+            fitPresentationToScreen();
+        });
+    }
+
+    function closeClassroomPresentation(e) {
+        if (e && e.target !== e.currentTarget) return;
+        const modal = document.getElementById('presentation-modal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    function zoomPresentation(delta) {
+        const card = document.getElementById('pres-card-content');
+        if (!card) return;
+        currentPresFontSize = Math.max(10, Math.min(42, currentPresFontSize + (delta * 2)));
+        card.style.setProperty('--pres-font-size', currentPresFontSize + 'px');
+    }
+
+    function resetPresentationZoom() {
+        const card = document.getElementById('pres-card-content');
+        if (!card) return;
+        currentPresFontSize = 24;
+        card.style.setProperty('--pres-font-size', currentPresFontSize + 'px');
+    }
+
+    function fitPresentationToScreen() {
+        const card = document.getElementById('pres-card-content');
+        const box = document.getElementById('pres-steps-box');
+        const body = document.getElementById('presentation-body');
+        if (!card || !box || !body) return;
+
+        // Reset to initial font size first to measure accurately
+        card.style.setProperty('--pres-font-size', '24px');
+        currentPresFontSize = 24;
+
+        requestAnimationFrame(() => {
+            const containerWidth = body.clientWidth - 64;
+            const contentWidth = box.scrollWidth;
+
+            if (contentWidth > containerWidth && containerWidth > 100) {
+                const ratio = containerWidth / contentWidth;
+                const fittedSize = Math.max(10, Math.floor(24 * ratio * 0.96));
+                currentPresFontSize = fittedSize;
+                card.style.setProperty('--pres-font-size', fittedSize + 'px');
+            }
+        });
+    }
+
+    // ESC key closes presentation modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('presentation-modal');
+            if (modal && modal.classList.contains('active')) {
+                closeClassroomPresentation();
+            }
+        }
+    });
 </script>
 
 <div id="toast-notice" class="toast-notice"></div>
