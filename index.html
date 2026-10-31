@@ -727,7 +727,7 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v0.92 beta_2026_10_19</div>
+        <div class="modal-version">v0.93 beta_2026_10_31</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
@@ -1388,10 +1388,8 @@
         let maxCol = divDigits.length - 1;
         for (let i = 0; i < steps.length; i++) {
             const step = steps[i];
-            if (step.hasSubtraction) {
-                let colEnd = step.columnEndIndex !== undefined ? step.columnEndIndex : step.chunkDigitsStr.length - 1;
-                if (colEnd > maxCol) maxCol = colEnd;
-            }
+            let colEnd = step.columnEndIndex !== undefined ? step.columnEndIndex : (divDigits.length - 1);
+            if (colEnd > maxCol) maxCol = colEnd;
         }
         const totalCols = maxCol + 1;
 
@@ -1421,23 +1419,24 @@
         }
         rowsHTML.push(buildRowHTML(topRowCells));
 
-        // Βήματα αφαίρεσης
-        let isFirstSubtraction = true;
-        let prevSubStep = null;
+        // Βήματα αφαίρεσης και κατεβάσματος ψηφίων
+        let hasStarted = false;
+        let prevStep = null;
         for (let i = 0; i < steps.length; i++) {
             const step = steps[i];
-            if (!step.hasSubtraction) continue;
+            let colEnd = step.columnEndIndex !== undefined ? step.columnEndIndex : (divDigits.length - 1);
 
-            const prodStr = step.product.toString();
-            let colEnd = step.columnEndIndex !== undefined ? step.columnEndIndex : step.chunkDigitsStr.length - 1;
+            // Αρχικά μηδενικά πριν την έναρξη των αφαιρέσεων (π.χ. 0,04 : 8 ή 3 : 75) παραλείπονται από τις ενδιάμεσες γραμμές
+            if (step.isInitialZero || (!hasStarted && !step.hasSubtraction)) {
+                continue;
+            }
 
-            // Εμφάνιση του τρέχοντος chunk αν δεν είναι το πρώτο βήμα
-            if (!isFirstSubtraction) {
-                // Υπολογισμός εμφάνισης chunk: διατηρούμε το υπόλοιπο της προηγούμενης αφαίρεσης (π.χ. '0' + '5' = '05')
+            // Εμφάνιση του τρέχοντος chunk (υπόλοιπο προηγούμενης αφαίρεσης + κατέβασμα ψηφίου)
+            if (hasStarted) {
                 let chunkStr = step.currentChunk.toString();
-                if (prevSubStep) {
-                    let remStr = prevSubStep.remainder.toString();
-                    let bd = prevSubStep.broughtDownDigit !== null ? prevSubStep.broughtDownDigit.toString() : '';
+                if (prevStep) {
+                    let remStr = prevStep.remainder.toString();
+                    let bd = prevStep.broughtDownDigit !== null ? prevStep.broughtDownDigit.toString() : '';
                     let combined = remStr + bd;
                     if (combined) chunkStr = combined;
                 }
@@ -1449,20 +1448,23 @@
                 }
                 rowsHTML.push(buildRowHTML(chunkCells));
             }
-            isFirstSubtraction = false;
-            prevSubStep = step;
 
-            // Γραμμή αφαίρεσης (αφαιρετέος) με υπογράμμιση και σύμβολο μείον
-            let prodCells = {};
-            let startProdCol = colEnd - prodStr.length + 1;
-            for (let k = 0; k < prodStr.length; k++) {
-                let prefix = (k === 0) ? '<span class="ld-minus">-</span>' : '';
-                prodCells[startProdCol + k] = {
-                    content: `${prefix}${prodStr[k]}`,
-                    className: 'ld-subtrahend-cell'
-                };
+            if (step.hasSubtraction) {
+                hasStarted = true;
+                const prodStr = step.product.toString();
+                let prodCells = {};
+                let startProdCol = colEnd - prodStr.length + 1;
+                for (let k = 0; k < prodStr.length; k++) {
+                    let prefix = (k === 0) ? '<span class="ld-minus">-</span>' : '';
+                    prodCells[startProdCol + k] = {
+                        content: `${prefix}${prodStr[k]}`,
+                        className: 'ld-subtrahend-cell'
+                    };
+                }
+                rowsHTML.push(buildRowHTML(prodCells));
             }
-            rowsHTML.push(buildRowHTML(prodCells));
+
+            prevStep = step;
 
             // Τελικό υπόλοιπο στο τελευταίο βήμα
             if (i === steps.length - 1) {
