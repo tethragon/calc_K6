@@ -929,10 +929,15 @@
             </button>
         </div>
         
-        <div class="modal-btn-row" id="pwa-install-container" style="margin: 8px 0;">
+        <div class="modal-btn-row" id="pwa-install-container" style="margin: 8px 0 4px 0;">
             <button class="modal-theme-btn" id="pwa-install-btn" onclick="triggerPWAInstall()" style="background: var(--btn-op-bg); color: var(--btn-op-text); border: 1.5px solid var(--input-border); font-weight: 600;">
                 <span id="pwa-icon">📲</span> <span id="pwa-text">Εγκατάσταση Εφαρμογής (PWA)</span>
             </button>
+            <div style="margin-top: 6px; font-size: 11.5px; text-align: center;">
+                <a href="javascript:void(0)" onclick="togglePWAGuide()" style="color: var(--highlight-color); text-decoration: underline; font-weight: 600; cursor: pointer;">
+                    ℹ️ Οδηγίες για Android, iPhone &amp; PC
+                </a>
+            </div>
         </div>
 
         <div class="modal-btn-row" id="pwa-share-container" style="margin: 8px 0;">
@@ -941,16 +946,35 @@
             </button>
         </div>
 
-        <div id="pwa-ios-guide" style="display: none; margin: 8px 0 12px 0; padding: 12px; background: var(--btn-base-bg); border: 1px dashed var(--input-border); border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main); text-align: left;">
-            <div style="font-weight: 700; margin-bottom: 6px; color: var(--highlight-color); font-size: 13px;">📲 Οδηγίες Εγκατάστασης σε iPhone / iPad:</div>
-            1. Στο κάτω μέρος του Safari, πατήστε το εικονίδιο <strong>Κοινοποίησης (Share ⎋)</strong>.<br>
-            2. Κάντε κύλιση προς τα κάτω και επιλέξτε <strong>«Προσθήκη στην οθόνη αφετηρίας» (Add to Home Screen ➕)</strong>.
-        </div>
+        <div id="pwa-guide-box" style="display: none; margin: 8px 0 14px 0; padding: 12px; background: var(--btn-base-bg); border: 1px dashed var(--input-border); border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main); text-align: left;">
+            <div style="font-weight: 700; margin-bottom: 8px; color: var(--highlight-color); font-size: 13px; display: flex; align-items: center; justify-content: space-between;">
+                <span>📲 Οδηγίες Εγκατάστασης (PWA):</span>
+                <span onclick="togglePWAGuide(false)" style="cursor: pointer; padding: 0 4px; font-size: 15px; color: var(--text-muted); font-weight: bold;">&times;</span>
+            </div>
 
-        <div id="pwa-desktop-guide" style="display: none; margin: 8px 0 12px 0; padding: 12px; background: var(--btn-base-bg); border: 1px dashed var(--input-border); border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main); text-align: left;">
-            <div style="font-weight: 700; margin-bottom: 6px; color: var(--highlight-color); font-size: 13px;">💻 Οδηγίες Εγκατάστασης σε Υπολογιστή:</div>
-            1. Στη δεξιά πλευρά της γραμμής διευθύνσεων (URL bar), πατήστε το εικονίδιο <strong>Εγκατάστασης (⊕ ή 💻)</strong>.<br>
-            2. Ή από το μενού του Chrome / Edge (τρεις τελείες <strong>⋮</strong>), επιλέξτε <strong>«Εγκατάσταση Calculator K6»</strong>.
+            <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-color);">
+                <div style="font-weight: 700; color: #16a34a; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                    <span>🤖</span> <span>Κινητά Android (Chrome / Firefox / Samsung Internet):</span>
+                </div>
+                1. Πατήστε το παραπάνω κουμπί <strong>«Εγκατάσταση Εφαρμογής»</strong>.<br>
+                2. Εναλλακτικά, πατήστε το μενού του φυλλομετρητή (τρεις τελείες <strong>⋮</strong> επάνω δεξιά) και επιλέξτε <strong>«Εγκατάσταση»</strong> (ή <strong>«Προσθήκη στην αρχική οθόνη»</strong>).
+            </div>
+
+            <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-color);">
+                <div style="font-weight: 700; color: #0284c7; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                    <span>🍏</span> <span>iPhone &amp; iPad (Safari):</span>
+                </div>
+                1. Στο κάτω μέρος της οθόνης πατήστε το εικονίδιο <strong>Κοινοποίησης (Share ⎋)</strong>.<br>
+                2. Κάντε κύλιση προς τα κάτω και επιλέξτε <strong>«Προσθήκη στην οθόνη αφετηρίας» (Add to Home Screen ➕)</strong>.
+            </div>
+
+            <div>
+                <div style="font-weight: 700; color: #7c3aed; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+                    <span>💻</span> <span>Υπολογιστής (Chrome / Firefox / Brave):</span>
+                </div>
+                1. Σε <strong>Chrome / Brave</strong>: Στη δεξιά πλευρά της γραμμής διευθύνσεων (URL bar), πατήστε το εικονίδιο <strong>Εγκατάστασης (⊕ ή 💻)</strong> ή από το μενού <strong>⋮</strong> &gt; <strong>«Εγκατάσταση Calculator K6»</strong>.<br>
+                2. Σε <strong>Firefox</strong>: Κάντε δεξί κλικ στην καρτέλα &gt; <strong>«Καρφίτσωμα καρτέλας» (Pin Tab)</strong> ή πατήστε το αστέρι στη γραμμή διευθύνσεων για άμεση προσθήκη στους σελιδοδείκτες.
+            </div>
         </div>
         
         <div class="modal-credit">
@@ -3568,12 +3592,20 @@
         });
     }
 
+    function togglePWAGuide(force) {
+        const guideBox = document.getElementById('pwa-guide-box');
+        if (!guideBox) return;
+        if (typeof force === 'boolean') {
+            guideBox.style.display = force ? 'block' : 'none';
+        } else {
+            guideBox.style.display = (guideBox.style.display === 'none' || !guideBox.style.display) ? 'block' : 'none';
+        }
+    }
+
     function checkPWAStatus() {
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                              window.navigator.standalone === true;
         const container = document.getElementById('pwa-install-container');
-        const iosGuide = document.getElementById('pwa-ios-guide');
-        const desktopGuide = document.getElementById('pwa-desktop-guide');
         const installBtn = document.getElementById('pwa-install-btn');
         const pwaText = document.getElementById('pwa-text');
         const pwaIcon = document.getElementById('pwa-icon');
@@ -3589,15 +3621,22 @@
             installBtn.style.cursor = 'default';
             if (pwaIcon) pwaIcon.innerText = '✅';
             if (pwaText) pwaText.innerText = 'Εφαρμογή Εγκατεστημένη';
-            if (iosGuide) iosGuide.style.display = 'none';
-            if (desktopGuide) desktopGuide.style.display = 'none';
+            togglePWAGuide(false);
             return;
         }
 
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /Android/i.test(navigator.userAgent);
+
         if (isIOS) {
             if (pwaIcon) pwaIcon.innerText = '📲';
             if (pwaText) pwaText.innerText = 'Εγκατάσταση σε iPhone / iPad';
+            return;
+        }
+
+        if (isAndroid) {
+            if (pwaIcon) pwaIcon.innerText = '📲';
+            if (pwaText) pwaText.innerText = 'Εγκατάσταση σε Android';
             return;
         }
 
@@ -3614,6 +3653,7 @@
     window.addEventListener('appinstalled', () => {
         deferredPWAInstallPrompt = null;
         checkPWAStatus();
+        togglePWAGuide(false);
         showToastNotification('🎉 Η εφαρμογή εγκαταστάθηκε επιτυχώς στη συσκευή σας!');
     });
 
@@ -3625,34 +3665,31 @@
             return;
         }
 
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const iosGuide = document.getElementById('pwa-ios-guide');
-        const desktopGuide = document.getElementById('pwa-desktop-guide');
-
         if (deferredPWAInstallPrompt) {
             deferredPWAInstallPrompt.prompt();
             deferredPWAInstallPrompt.userChoice.then((choiceResult) => {
                 if (choiceResult && choiceResult.outcome === 'accepted') {
                     console.log('PWA installation accepted');
                     showToastNotification('🎉 Ευχαριστούμε για την εγκατάσταση!');
+                    togglePWAGuide(false);
                 }
                 deferredPWAInstallPrompt = null;
                 checkPWAStatus();
             });
-        } else if (isIOS) {
-            if (desktopGuide) desktopGuide.style.display = 'none';
-            if (iosGuide) {
-                const isHidden = (iosGuide.style.display === 'none' || !iosGuide.style.display);
-                iosGuide.style.display = isHidden ? 'block' : 'none';
-            }
         } else {
-            // Σε περιβάλλον Desktop ή όταν ο φυλλομετρητής δεν έχει δώσει ακόμα το prompt event
-            if (iosGuide) iosGuide.style.display = 'none';
-            if (desktopGuide) {
-                const isHidden = (desktopGuide.style.display === 'none' || !desktopGuide.style.display);
-                desktopGuide.style.display = isHidden ? 'block' : 'none';
+            // Άνοιγμα οδηγιών για Android, iPhone ή PC
+            togglePWAGuide(true);
+
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isAndroid = /Android/i.test(navigator.userAgent);
+
+            if (isIOS) {
+                showToastNotification('🍏 iPhone/iPad: Πατήστε Κοινοποίηση ⎋ ➔ Προσθήκη στην οθόνη αφετηρίας ➕');
+            } else if (isAndroid) {
+                showToastNotification('🤖 Android: Πατήστε ⋮ ➔ «Εγκατάσταση εφαρμογής» ή «Προσθήκη στην αρχική οθόνη»');
+            } else {
+                showToastNotification('💻 Υπολογιστής: Πατήστε το εικονίδιο ⊕ στη γραμμή διευθύνσεων!');
             }
-            showToastNotification('💡 Για εγκατάσταση, πατήστε το εικονίδιο ⊕ στη γραμμή διευθύνσεων!');
         }
     }
 
