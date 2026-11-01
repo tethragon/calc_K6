@@ -382,6 +382,7 @@
             justify-content: space-between;
             width: 100%;
             flex-wrap: nowrap;
+            gap: 6px;
         }
         .calc-action-bar.expr-action-bar .btn-copy-img {
             flex: 1 1 0;
@@ -390,6 +391,13 @@
             font-size: 12px;
             min-width: 0;
         }
+        .calc-action-bar.expr-action-bar .btn-copy-img span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .btn-lbl-short { display: none; }
+        .btn-lbl-full { display: inline; }
         .btn-copy-img {
             background: var(--btn-base-bg);
             color: var(--text-main);
@@ -855,6 +863,27 @@
             .value { font-size: 20px; }
             button.theory::after { font-size: 10px; padding: 4px 6px; bottom: 110%; white-space: normal; width: 120px; }
             button.theory:hover::after { bottom: 115%; }
+
+            /* Πρόταση 1: Μονολεκτικές καθαρές ετικέτες σε portrait κινητού */
+            .btn-lbl-short { display: inline; }
+            .btn-lbl-full { display: none; }
+            .calc-action-bar.expr-action-bar { gap: 5px; }
+            .calc-action-bar.expr-action-bar .btn-copy-img {
+                padding: 7px 4px;
+                font-size: 11.5px;
+                gap: 4px;
+            }
+        }
+
+        @media (orientation: portrait) and (max-width: 768px) {
+            .btn-lbl-short { display: inline; }
+            .btn-lbl-full { display: none; }
+            .calc-action-bar.expr-action-bar { gap: 5px; }
+            .calc-action-bar.expr-action-bar .btn-copy-img {
+                padding: 7px 4px;
+                font-size: 11.5px;
+                gap: 4px;
+            }
         }
     </style>
 </head>
@@ -2831,13 +2860,19 @@
         return `
             <div class="calc-action-bar expr-action-bar">
                 <button class="btn-copy-img" onclick="copyVisualAsImage('printable-expr', this)" title="Αντιγραφή πράξης ως εικόνα στο πρόχειρο (PNG)">
-                    <span>📷</span> <span>Αντιγρ. Εικόνας</span>
+                    <span>📷</span>
+                    <span class="btn-lbl-full">Αντιγρ. Εικόνας</span>
+                    <span class="btn-lbl-short">Εικόνα</span>
                 </button>
                 <button class="btn-copy-img" onclick="copyExpressionAsText(this)" title="Αντιγραφή βημάτων ως κείμενο monospace (έτοιμο για LibreOffice Writer / Word)">
-                    <span>📋</span> <span>Αντιγρ. Κειμένου</span>
+                    <span>📋</span>
+                    <span class="btn-lbl-full">Αντιγρ. Κειμένου</span>
+                    <span class="btn-lbl-short">Κείμενο</span>
                 </button>
                 <button class="btn-copy-img btn-pres-trigger" onclick="openClassroomPresentation()" title="Πλήρης Οθόνη (προβολή χωρίς οριζόντιο σκρολ)">
-                    <span>⛶</span> <span>Πλήρης Οθόνη</span>
+                    <span>⛶</span>
+                    <span class="btn-lbl-full">Πλήρης Οθόνη</span>
+                    <span class="btn-lbl-short">Οθόνη</span>
                 </button>
             </div>
             <div id="printable-expr" class="printable-calc-card expr-card">
@@ -2912,7 +2947,7 @@
         }
 
         if (btnElement) {
-            btnElement.innerHTML = '<span>✅</span> <span>Αντιγράφηκε!</span>';
+            btnElement.innerHTML = '<span>✅</span> <span class="btn-lbl-full">Αντιγράφηκε!</span><span class="btn-lbl-short">OK!</span>';
             btnElement.classList.add('btn-copy-success');
             setTimeout(() => {
                 btnElement.innerHTML = origHTML;
@@ -3359,7 +3394,7 @@
         
         const origHTML = btnElement ? btnElement.innerHTML : '';
         if (btnElement) {
-            btnElement.innerHTML = '<span>⏳</span> <span>Αντιγραφή...</span>';
+            btnElement.innerHTML = '<span>⏳</span> <span class="btn-lbl-full">Αντιγραφή...</span><span class="btn-lbl-short">Αναμονή...</span>';
             btnElement.disabled = true;
         }
         
@@ -3441,7 +3476,7 @@
 
                 if (copied) {
                     if (btnElement) {
-                        btnElement.innerHTML = '<span>✅</span> <span>Αντιγράφηκε!</span>';
+                        btnElement.innerHTML = '<span>✅</span> <span class="btn-lbl-full">Αντιγράφηκε!</span><span class="btn-lbl-short">OK!</span>';
                         btnElement.classList.add('btn-copy-success');
                         setTimeout(() => {
                             btnElement.innerHTML = origHTML;
