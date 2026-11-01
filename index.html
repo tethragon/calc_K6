@@ -23,7 +23,16 @@
     <meta property="og:title" content="Calculator K6" />
     <meta property="og:description" content="Scientific & Educational Calculator with vertical arithmetic algorithms and linear algebra." />
     <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#0056b3" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Calc K6" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16x16.png" />
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css"/>
@@ -912,12 +921,36 @@
 <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
     <div class="modal-content">
         <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v0.95 beta_2026_10_31</div>
+        <div class="modal-version">v0.96 beta_2026_11_01</div>
         
         <div class="modal-btn-row">
             <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
                 <span id="theme-icon">🌙</span> <span id="theme-text">Enable Dark Mode</span>
             </button>
+        </div>
+        
+        <div class="modal-btn-row" id="pwa-install-container" style="margin: 8px 0;">
+            <button class="modal-theme-btn" id="pwa-install-btn" onclick="triggerPWAInstall()" style="background: var(--btn-op-bg); color: var(--btn-op-text); border: 1.5px solid var(--input-border); font-weight: 600;">
+                <span id="pwa-icon">📲</span> <span id="pwa-text">Εγκατάσταση Εφαρμογής (PWA)</span>
+            </button>
+        </div>
+
+        <div class="modal-btn-row" id="pwa-share-container" style="margin: 8px 0;">
+            <button class="modal-theme-btn" id="modal-share-btn" onclick="shareCalculatorApp()" style="background: var(--btn-sci-bg); color: var(--btn-sci-text); border: 1.5px solid var(--input-border); font-weight: 600;">
+                <span>🔗</span> <span>Κοινοποίηση Συνδέσμου</span>
+            </button>
+        </div>
+
+        <div id="pwa-ios-guide" style="display: none; margin: 8px 0 12px 0; padding: 12px; background: var(--btn-base-bg); border: 1px dashed var(--input-border); border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main); text-align: left;">
+            <div style="font-weight: 700; margin-bottom: 6px; color: var(--highlight-color); font-size: 13px;">📲 Οδηγίες Εγκατάστασης σε iPhone / iPad:</div>
+            1. Στο κάτω μέρος του Safari, πατήστε το εικονίδιο <strong>Κοινοποίησης (Share ⎋)</strong>.<br>
+            2. Κάντε κύλιση προς τα κάτω και επιλέξτε <strong>«Προσθήκη στην οθόνη αφετηρίας» (Add to Home Screen ➕)</strong>.
+        </div>
+
+        <div id="pwa-desktop-guide" style="display: none; margin: 8px 0 12px 0; padding: 12px; background: var(--btn-base-bg); border: 1px dashed var(--input-border); border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main); text-align: left;">
+            <div style="font-weight: 700; margin-bottom: 6px; color: var(--highlight-color); font-size: 13px;">💻 Οδηγίες Εγκατάστασης σε Υπολογιστή:</div>
+            1. Στη δεξιά πλευρά της γραμμής διευθύνσεων (URL bar), πατήστε το εικονίδιο <strong>Εγκατάστασης (⊕ ή 💻)</strong>.<br>
+            2. Ή από το μενού του Chrome / Edge (τρεις τελείες <strong>⋮</strong>), επιλέξτε <strong>«Εγκατάσταση Calculator K6»</strong>.
         </div>
         
         <div class="modal-credit">
@@ -1057,6 +1090,9 @@
 
     // --- SETTINGS MODAL LOGIC ---
     function openSettings() {
+        if (typeof checkPWAStatus === 'function') {
+            checkPWAStatus();
+        }
         document.getElementById('settings-modal').classList.add('active');
     }
 
@@ -3514,6 +3550,166 @@
             }
         }
     });
+
+    // =========================================================================
+    // --- SERVICE WORKER REGISTRATION & PWA INSTALL MANAGEMENT ---
+    // =========================================================================
+    let deferredPWAInstallPrompt = null;
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js', { scope: './' })
+                .then((registration) => {
+                    console.log('Calculator K6 ServiceWorker active with scope:', registration.scope);
+                })
+                .catch((error) => {
+                    console.warn('ServiceWorker registration error:', error);
+                });
+        });
+    }
+
+    function checkPWAStatus() {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                             window.navigator.standalone === true;
+        const container = document.getElementById('pwa-install-container');
+        const iosGuide = document.getElementById('pwa-ios-guide');
+        const desktopGuide = document.getElementById('pwa-desktop-guide');
+        const installBtn = document.getElementById('pwa-install-btn');
+        const pwaText = document.getElementById('pwa-text');
+        const pwaIcon = document.getElementById('pwa-icon');
+
+        if (!container || !installBtn) return;
+
+        // Το κουμπί εγκατάστασης είναι πλέον πάντοτε ορατό στο modal ρυθμίσεων
+        container.style.display = 'block';
+
+        if (isStandalone) {
+            installBtn.disabled = true;
+            installBtn.style.opacity = '0.75';
+            installBtn.style.cursor = 'default';
+            if (pwaIcon) pwaIcon.innerText = '✅';
+            if (pwaText) pwaText.innerText = 'Εφαρμογή Εγκατεστημένη';
+            if (iosGuide) iosGuide.style.display = 'none';
+            if (desktopGuide) desktopGuide.style.display = 'none';
+            return;
+        }
+
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            if (pwaIcon) pwaIcon.innerText = '📲';
+            if (pwaText) pwaText.innerText = 'Εγκατάσταση σε iPhone / iPad';
+            return;
+        }
+
+        if (pwaIcon) pwaIcon.innerText = '📲';
+        if (pwaText) pwaText.innerText = 'Εγκατάσταση Εφαρμογής (PWA)';
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPWAInstallPrompt = e;
+        checkPWAStatus();
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredPWAInstallPrompt = null;
+        checkPWAStatus();
+        showToastNotification('🎉 Η εφαρμογή εγκαταστάθηκε επιτυχώς στη συσκευή σας!');
+    });
+
+    function triggerPWAInstall() {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                             window.navigator.standalone === true;
+        if (isStandalone) {
+            showToastNotification('✅ Η εφαρμογή είναι ήδη εγκατεστημένη!');
+            return;
+        }
+
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const iosGuide = document.getElementById('pwa-ios-guide');
+        const desktopGuide = document.getElementById('pwa-desktop-guide');
+
+        if (deferredPWAInstallPrompt) {
+            deferredPWAInstallPrompt.prompt();
+            deferredPWAInstallPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult && choiceResult.outcome === 'accepted') {
+                    console.log('PWA installation accepted');
+                    showToastNotification('🎉 Ευχαριστούμε για την εγκατάσταση!');
+                }
+                deferredPWAInstallPrompt = null;
+                checkPWAStatus();
+            });
+        } else if (isIOS) {
+            if (desktopGuide) desktopGuide.style.display = 'none';
+            if (iosGuide) {
+                const isHidden = (iosGuide.style.display === 'none' || !iosGuide.style.display);
+                iosGuide.style.display = isHidden ? 'block' : 'none';
+            }
+        } else {
+            // Σε περιβάλλον Desktop ή όταν ο φυλλομετρητής δεν έχει δώσει ακόμα το prompt event
+            if (iosGuide) iosGuide.style.display = 'none';
+            if (desktopGuide) {
+                const isHidden = (desktopGuide.style.display === 'none' || !desktopGuide.style.display);
+                desktopGuide.style.display = isHidden ? 'block' : 'none';
+            }
+            showToastNotification('💡 Για εγκατάσταση, πατήστε το εικονίδιο ⊕ στη γραμμή διευθύνσεων!');
+        }
+    }
+
+    // --- SHARE CALCULATOR APP ---
+    async function shareCalculatorApp() {
+        const canonicalUrl = 'https://tethragon.github.io/calc_K6/';
+        let shareUrl = canonicalUrl;
+        if (window.location && window.location.hostname && window.location.hostname.includes('github.io')) {
+            shareUrl = window.location.href.split('?')[0].split('#')[0];
+        }
+
+        const shareData = {
+            title: 'Calculator K6',
+            text: 'Calculator K6 - Εκπαιδευτική & Επιστημονική Αριθμομηχανή',
+            url: shareUrl
+        };
+
+        // 1. Αντιγραφή στο Clipboard (πάντα, για άμεση επικόλληση σε άλλες εφαρμογές)
+        let copySuccess = false;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                copySuccess = true;
+            } catch (err) {
+                console.warn('Clipboard writeText failed:', err);
+            }
+        }
+
+        if (!copySuccess) {
+            try {
+                const tempInput = document.createElement('input');
+                tempInput.value = shareUrl;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                copySuccess = true;
+            } catch (err) {
+                console.warn('Fallback copy failed:', err);
+            }
+        }
+
+        // 2. Ενεργοποίηση Native Web Share API αν υποστηρίζεται (π.χ. σε κινητά Android/iOS)
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+                showToastNotification('📋 Ο σύνδεσμος κοινοποιήθηκε και αντιγράφηκε στο πρόχειρο!');
+                return;
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.log('Share error:', err);
+                }
+            }
+        }
+
+        showToastNotification('📋 Ο σύνδεσμος της εφαρμογής αντιγράφηκε στο πρόχειρο!');
+    }
 </script>
 
 <div id="toast-notice" class="toast-notice"></div>
