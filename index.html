@@ -314,37 +314,29 @@
             letter-spacing: 0.5px;
             margin-bottom: 6px;
         }
-        .license-title {
-            font-size: 12px;
+        .license-copyright {
+            font-size: 12.5px;
             font-weight: 600;
             color: var(--text-main);
             margin-bottom: 4px;
         }
-        .license-copyright {
-            font-size: 11.5px;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 5px;
-        }
         .license-desc {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text-muted);
-            line-height: 1.35;
-            margin-bottom: 6px;
+            line-height: 1.4;
         }
         .license-link {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            font-size: 11px;
+            gap: 2px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--highlight-color);
-            text-decoration: none;
+            text-decoration: underline;
             transition: opacity 0.2s;
         }
         .license-link:hover {
-            text-decoration: underline;
-            opacity: 0.85;
+            opacity: 0.8;
         }
 
         .modal-close {
@@ -1019,14 +1011,10 @@
         
         <div class="modal-license">
             <span class="license-badge">GNU GPLv3</span>
-            <div class="license-title">Free &amp; Open Source Software</div>
             <div class="license-copyright">Copyright &copy; 2025 George Petrakis</div>
             <div class="license-desc">
-                This program is free software: you can redistribute it and/or modify it under the terms of the <strong>GNU General Public License v3</strong> (or later). Distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.
+                Διατίθεται υπό την άδεια <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener noreferrer" class="license-link">GNU GPLv3 ↗</a>
             </div>
-            <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener noreferrer" class="license-link">
-                GNU General Public License v3.0 ↗
-            </a>
         </div>
         
         <button class="modal-close" onclick="closeSettings()">Close</button>
