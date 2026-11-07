@@ -144,18 +144,51 @@
             transition: background-color 0.3s;
         }
 
-        .settings-toggle {
+        /* --- TOP-RIGHT ACTIONS GROUP (36x36px) --- */
+        .top-actions-group {
             position: absolute;
-            top: 20px; right: 20px;
-            background: none; border: none;
-            font-size: 24px; cursor: pointer;
-            color: var(--text-main);
-            padding: 0;
+            top: 16px; right: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             z-index: 10;
-            opacity: 0.6;
-            transition: opacity 0.2s, transform 0.3s;
         }
-        .settings-toggle:hover { opacity: 1; transform: rotate(90deg); }
+        .top-action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--btn-base-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+            outline: none;
+        }
+        .top-action-btn svg {
+            display: block;
+            pointer-events: none;
+        }
+        .top-action-btn:hover {
+            background: var(--btn-base-hover);
+            transform: translateY(-1px) scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14);
+            border-color: var(--highlight-color);
+            color: var(--highlight-color);
+        }
+        .top-action-btn:active {
+            transform: scale(0.95);
+        }
+        .top-action-btn.btn-share-success {
+            background: #16a34a !important;
+            color: #ffffff !important;
+            border-color: #15803d !important;
+            box-shadow: 0 0 10px rgba(22, 163, 74, 0.5) !important;
+        }
 
         h3 { 
             text-align: center; 
@@ -248,60 +281,344 @@
             padding-bottom: 6px; 
         }
         
-        /* --- MODAL STYLES --- */
+        /* --- UNIFIED IDENTITY & PWA MODAL STYLES --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--modal-overlay);
+            background-color: rgba(15, 23, 42, 0.68);
             display: none; justify-content: center; align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(2px);
-            opacity: 0; transition: opacity 0.3s;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            opacity: 0; transition: opacity 0.25s ease;
+            padding: 16px;
+            box-sizing: border-box;
         }
         .modal-overlay.active { display: flex; opacity: 1; }
         
         .modal-content {
             background-color: var(--modal-bg);
             color: var(--text-main);
-            width: 90%; max-width: 420px;
-            padding: 25px; border-radius: 15px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            text-align: center;
-            transform: scale(0.9); transition: transform 0.3s;
+            width: 100%; max-width: 460px;
+            padding: 22px 24px; border-radius: 18px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+            text-align: left;
+            transform: scale(0.95); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             border: 1px solid var(--border-color);
-            max-height: 85vh;
+            max-height: 88vh;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-sizing: border-box;
         }
         .modal-overlay.active .modal-content { transform: scale(1); }
         
-        .modal-header { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-        .modal-version { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
-        
-        .modal-btn-row { margin: 15px 0; }
-        .modal-theme-btn {
-            width: 100%; padding: 12px; background: var(--btn-base-bg);
-            color: var(--text-main); border: 1px solid var(--border-color);
-            border-radius: 8px; font-size: 16px; cursor: pointer;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
+        /* Modal Header Row */
+        .modal-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
         }
-        .modal-theme-btn:hover { background: var(--btn-base-hover); }
-
-        .modal-credit {
-            margin-top: 20px; margin-bottom: 12px;
-            padding-top: 15px; border-top: 1px solid var(--border-color);
+        .modal-main-title {
+            font-size: 16.5px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 0.2px;
         }
-        .credit-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-        .credit-name { font-size: 14px; font-weight: bold; color: var(--highlight-color); margin-top: 3px; font-family: 'Segoe UI', sans-serif;}
+        .modal-x-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 26px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .modal-x-close:hover {
+            color: var(--highlight-color);
+            transform: scale(1.15);
+        }
 
-        .modal-license {
-            margin: 12px 0 20px 0;
-            padding: 10px 12px;
-            background: rgba(0, 0, 0, 0.03);
+        /* Identity Meta Row (Architect & Version) */
+        .info-identity-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            gap: 12px;
+        }
+        .info-meta-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .architect-tag {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.9px;
+            font-weight: 700;
+        }
+        .architect-name {
+            font-size: 15.5px;
+            font-weight: 700;
+            color: var(--highlight-color);
+            letter-spacing: -0.2px;
+            line-height: 1.25;
+        }
+        .version-meta-line {
+            margin-top: 5px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .version-badge {
+            background: rgba(37, 99, 235, 0.1);
+            color: #2563eb;
+            border: 1px solid rgba(37, 99, 235, 0.28);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2.5px 8.5px;
+            border-radius: 6px;
+            letter-spacing: 0.3px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .version-badge::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #2563eb;
+            display: inline-block;
+        }
+        [data-theme="dark"] .version-badge {
+            background: rgba(59, 130, 246, 0.16);
+            color: #93c5fd;
+            border-color: rgba(96, 165, 250, 0.35);
+        }
+        [data-theme="dark"] .version-badge::before {
+            background: #60a5fa;
+        }
+        .info-meta-right {
+            display: flex;
+            align-items: center;
+            align-self: center;
+        }
+        .modal-theme-btn-compact {
+            background: var(--btn-base-bg);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            color: var(--text-main);
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+        .modal-theme-btn-compact:hover {
+            background: var(--btn-base-hover);
+            border-color: var(--highlight-color);
+        }
+
+        /* PWA Installation Section */
+        .pwa-guide-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .pwa-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .pwa-direct-install-btn {
+            width: 100%;
+            padding: 11px 16px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            transition: all 0.2s ease;
+        }
+        .pwa-direct-install-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+        .pwa-direct-install-btn:active {
+            transform: scale(0.98);
+        }
+
+        .pwa-installed-badge {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #e8f5e9;
+            color: #1b5e20;
+            border: 1px solid #a5d6a7;
+            padding: 9px 12px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 700;
             text-align: center;
         }
-        [data-theme="dark"] .modal-license {
+        [data-theme="dark"] .pwa-installed-badge {
+            background: rgba(46, 125, 50, 0.2);
+            color: #81c784;
+            border-color: rgba(129, 199, 132, 0.3);
+        }
+
+        /* Horizontal PWA Tabs Layout */
+        .pwa-tabs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+        .pwa-tabs-header {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px;
+        }
+        .pwa-tab-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 7px 6px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            color: var(--text-main);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            min-height: 36px;
+        }
+        .pwa-tab-btn:hover {
+            background: var(--btn-base-hover);
+            border-color: var(--highlight-color);
+            transform: translateY(-1px);
+        }
+        .pwa-tab-btn.active {
+            background: var(--btn-base-hover);
+            border-color: var(--highlight-color);
+            color: var(--highlight-color);
+            box-shadow: 0 0 0 1.5px var(--highlight-color);
+            font-weight: 700;
+        }
+        .pwa-tab-icon {
+            font-size: 13.5px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .pwa-tab-label {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pwa-tab-arrow {
+            font-size: 9.5px;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .pwa-tab-btn.active .pwa-tab-arrow {
+            transform: rotate(180deg);
+            color: var(--highlight-color);
+        }
+        .pwa-tab-panels {
+            display: none;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--modal-bg);
+            padding: 11px 13px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-main);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+            animation: fadeInPane 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeInPane {
+            from { opacity: 0; transform: translateY(-3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pwa-tab-pane {
+            display: none;
+        }
+        .pwa-tab-pane.active {
+            display: block;
+        }
+        .acc-device-group {
+            margin-bottom: 8px;
+        }
+        .acc-device-group:last-child {
+            margin-bottom: 0;
+        }
+        .acc-device-title {
+            font-weight: 700;
+            color: var(--highlight-color);
+            margin-bottom: 2px;
+        }
+        .acc-device-steps {
+            color: var(--text-main);
+            padding-left: 2px;
+        }
+        @media (max-width: 440px) {
+            .pwa-tabs-header {
+                gap: 5px;
+            }
+            .pwa-tab-btn {
+                padding: 6px 4px;
+                font-size: 11px;
+                gap: 3px;
+                min-height: 34px;
+            }
+            .pwa-tab-icon {
+                font-size: 12px;
+            }
+        }
+
+        /* License Card */
+        .modal-license-card {
+            padding: 12px 14px;
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            text-align: center;
+        }
+        [data-theme="dark"] .modal-license-card {
             background: rgba(255, 255, 255, 0.03);
+        }
+        .license-badge-row {
+            margin-bottom: 6px;
         }
         .license-badge {
             display: inline-block;
@@ -312,13 +629,12 @@
             padding: 2px 8px;
             border-radius: 10px;
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
         }
         .license-copyright {
             font-size: 12.5px;
             font-weight: 600;
             color: var(--text-main);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         .license-desc {
             font-size: 12px;
@@ -339,12 +655,28 @@
             opacity: 0.8;
         }
 
-        .modal-close {
-            background: var(--btn-action-bg); color: white;
-            padding: 10px 30px; border-radius: 20px; font-size: 16px; border: none;
-            cursor: pointer; width: 100%;
+        /* Modal Footer */
+        .modal-footer {
+            margin-top: 4px;
         }
-        .modal-close:hover { background: var(--btn-action-hover); }
+        .modal-close-btn {
+            background: var(--btn-action-bg);
+            color: #ffffff;
+            padding: 11px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .modal-close-btn:hover {
+            background: var(--btn-action-hover);
+        }
+        .modal-close-btn:active {
+            transform: scale(0.98);
+        }
 
         /* --- LONG DIVISION & VMUL Styles --- */
         .long-div-container { 
@@ -438,23 +770,26 @@
         }
         .toast-notice {
             position: fixed;
-            bottom: 25px;
+            top: 24px;
             left: 50%;
-            transform: translateX(-50%) translateY(70px);
-            background: #323232;
+            transform: translateX(-50%) translateY(-90px);
+            background: #1e293b;
             color: #ffffff;
-            padding: 10px 22px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 500;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 13.5px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
             z-index: 99999;
             opacity: 0;
-            transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s ease;
+            transition: transform 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s ease;
             pointer-events: none;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            max-width: 90vw;
+            text-align: center;
         }
         .toast-notice.show {
             transform: translateX(-50%) translateY(0);
@@ -888,7 +1223,24 @@
 <body>
 
 <div class="calculator" id="calc-body">
-    <button class="settings-toggle" onclick="openSettings()" title="Ρυθμίσεις & Πληροφορίες">⚙️</button>
+    <div class="top-actions-group">
+        <button class="top-action-btn" id="top-share-btn" onclick="handleTopShareClick()" title="Κοινοποίηση εφαρμογής" aria-label="Κοινοποίηση εφαρμογής">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+        </button>
+        <button class="top-action-btn" id="top-info-btn" onclick="openInfoModal()" title="Ταυτότητα Εφαρμογής &amp; Εγκατάσταση PWA" aria-label="Πληροφορίες &amp; Εγκατάσταση">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+        </button>
+    </div>
     
     <h3>Calculator K6</h3>
     
@@ -944,80 +1296,132 @@
     </div>
 </div>
 
-<!-- SETTINGS MODAL -->
-<div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
-    <div class="modal-content">
-        <div class="modal-header">Calculator K6</div>
-        <div class="modal-version">v0.96 beta_2026_11_01</div>
-        
-        <div class="modal-btn-row">
-            <button class="modal-theme-btn" onclick="toggleThemeInsideModal()">
-                <span id="theme-icon">🌙</span> <span id="theme-text">Enable Dark Mode</span>
-            </button>
-        </div>
-        
-        <div class="modal-btn-row" id="pwa-install-container" style="margin: 8px 0 4px 0;">
-            <button class="modal-theme-btn" id="pwa-install-btn" onclick="triggerPWAInstall()" style="background: var(--btn-op-bg); color: var(--btn-op-text); border: 1.5px solid var(--input-border); font-weight: 600;">
-                <span id="pwa-icon">📲</span> <span id="pwa-text">Εγκατάσταση Εφαρμογής (PWA)</span>
-            </button>
-            <div style="margin-top: 6px; font-size: 11.5px; text-align: center;">
-                <a href="javascript:void(0)" onclick="togglePWAGuide()" style="color: var(--highlight-color); text-decoration: underline; font-weight: 600; cursor: pointer;">
-                    ℹ️ Οδηγίες για Android, iPhone &amp; PC
-                </a>
-            </div>
+<!-- UNIFIED INFO & PWA MODAL -->
+<div class="modal-overlay" id="info-modal" onclick="closeInfoModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <!-- α) Header: Τίτλος & Κουμπί X -->
+        <div class="modal-header-row">
+            <div class="modal-main-title">Ταυτότητα Εφαρμογής &amp; Εγκατάσταση</div>
+            <button type="button" class="modal-x-close" onclick="closeInfoModal()" title="Κλείσιμο (Esc)" aria-label="Κλείσιμο">&times;</button>
         </div>
 
-        <div class="modal-btn-row" id="pwa-share-container" style="margin: 8px 0;">
-            <button class="modal-theme-btn" id="modal-share-btn" onclick="shareCalculatorApp()" style="background: var(--btn-sci-bg); color: var(--btn-sci-text); border: 1.5px solid var(--input-border); font-weight: 600;">
-                <span>🔗</span> <span>Κοινοποίηση Συνδέσμου</span>
-            </button>
-        </div>
-
-        <div id="pwa-guide-box" style="display: none; margin: 8px 0 14px 0; padding: 12px; background: var(--btn-base-bg); border: 1px dashed var(--input-border); border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-main); text-align: left;">
-            <div style="font-weight: 700; margin-bottom: 8px; color: var(--highlight-color); font-size: 13px; display: flex; align-items: center; justify-content: space-between;">
-                <span>📲 Οδηγίες Εγκατάστασης (PWA):</span>
-                <span onclick="togglePWAGuide(false)" style="cursor: pointer; padding: 0 4px; font-size: 15px; color: var(--text-muted); font-weight: bold;">&times;</span>
-            </div>
-
-            <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-color);">
-                <div style="font-weight: 700; color: #16a34a; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
-                    <span>🤖</span> <span>Κινητά Android (Chrome / Firefox / Samsung Internet):</span>
+        <!-- β) Στοιχεία Program Architect & Έκδοση (vX.X.X με badge) + Theme Toggle -->
+        <div class="info-identity-row">
+            <div class="info-meta-left">
+                <div class="architect-tag">Program Architect</div>
+                <div class="architect-name">George Petrakis</div>
+                <div class="version-meta-line">
+                    <span class="version-badge">v0.97 beta_2026_11_07</span>
                 </div>
-                1. Πατήστε το παραπάνω κουμπί <strong>«Εγκατάσταση Εφαρμογής»</strong>.<br>
-                2. Εναλλακτικά, πατήστε το μενού του φυλλομετρητή (τρεις τελείες <strong>⋮</strong> επάνω δεξιά) και επιλέξτε <strong>«Εγκατάσταση»</strong> (ή <strong>«Προσθήκη στην αρχική οθόνη»</strong>).
             </div>
-
-            <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-color);">
-                <div style="font-weight: 700; color: #0284c7; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
-                    <span>🍏</span> <span>iPhone &amp; iPad (Safari):</span>
-                </div>
-                1. Στο κάτω μέρος της οθόνης πατήστε το εικονίδιο <strong>Κοινοποίησης (Share ⎋)</strong>.<br>
-                2. Κάντε κύλιση προς τα κάτω και επιλέξτε <strong>«Προσθήκη στην οθόνη αφετηρίας» (Add to Home Screen ➕)</strong>.
-            </div>
-
-            <div>
-                <div style="font-weight: 700; color: #7c3aed; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
-                    <span>💻</span> <span>Υπολογιστής (Chrome / Firefox / Brave):</span>
-                </div>
-                1. Σε <strong>Chrome / Brave</strong>: Στη δεξιά πλευρά της γραμμής διευθύνσεων (URL bar), πατήστε το εικονίδιο <strong>Εγκατάστασης (⊕ ή 💻)</strong> ή από το μενού <strong>⋮</strong> &gt; <strong>«Εγκατάσταση Calculator K6»</strong>.<br>
-                2. Σε <strong>Firefox</strong>: Κάντε δεξί κλικ στην καρτέλα &gt; <strong>«Καρφίτσωμα καρτέλας» (Pin Tab)</strong> ή πατήστε το αστέρι στη γραμμή διευθύνσεων για άμεση προσθήκη στους σελιδοδείκτες.
+            <div class="info-meta-right">
+                <button type="button" class="modal-theme-btn-compact" onclick="toggleThemeInsideModal()" title="Εναλλαγή Θέματος (Dark/Light)">
+                    <span id="theme-icon">🌙</span> <span id="theme-text">Dark</span>
+                </button>
             </div>
         </div>
-        
-        <div class="modal-credit">
-            <div class="credit-label">Program Architect</div>
-            <div class="credit-name">George Petrakis</div>
+
+        <!-- γ) Ενότητα «Οδηγός Εγκατάστασης (PWA App)» -->
+        <div class="pwa-guide-section">
+            <div class="pwa-section-title">
+                <span>📲</span> <span>Οδηγός Εγκατάστασης (PWA App)</span>
+            </div>
+
+            <!-- Ένδειξη αν η εφαρμογή τρέχει ήδη ως εγκατεστημένη -->
+            <div id="pwa-standalone-badge" class="pwa-installed-badge">
+                <span>✓</span> <span>Η εφαρμογή είναι ήδη εγκατεστημένη στη συσκευή σας</span>
+            </div>
+
+            <!-- Κουμπί άμεσης εγκατάστασης (εμφανίζεται αυτόματα μόνο όταν υποστηρίζεται μέσω beforeinstallprompt) -->
+            <div id="pwa-direct-install-container" style="display: none;">
+                <button type="button" class="pwa-direct-install-btn" id="pwa-direct-install-btn" onclick="triggerPWAInstall()">
+                    <span>📲</span> <span>Εγκατάσταση Εφαρμογής στη Συσκευή</span>
+                </button>
+            </div>
+
+            <!-- 3 Οριζόντια, κομψά κουμπιά οδηγιών (Chrome / Firefox / iPhone) - Αρχικά ΟΛΑ ΚΛΕΙΣΤΑ -->
+            <div class="pwa-tabs-container">
+                <div class="pwa-tabs-header">
+                    <button type="button" class="pwa-tab-btn" id="pwa-tab-chrome" onclick="togglePWATab('chrome')" title="Οδηγίες εγκατάστασης για Google Chrome">
+                        <span class="pwa-tab-icon">🌐</span>
+                        <span class="pwa-tab-label">Chrome</span>
+                        <span class="pwa-tab-arrow">▾</span>
+                    </button>
+                    <button type="button" class="pwa-tab-btn" id="pwa-tab-firefox" onclick="togglePWATab('firefox')" title="Οδηγίες εγκατάστασης για Mozilla Firefox">
+                        <span class="pwa-tab-icon">🦊</span>
+                        <span class="pwa-tab-label">Firefox</span>
+                        <span class="pwa-tab-arrow">▾</span>
+                    </button>
+                    <button type="button" class="pwa-tab-btn" id="pwa-tab-safari" onclick="togglePWATab('safari')" title="Οδηγίες εγκατάστασης για iPhone / iPad">
+                        <span class="pwa-tab-icon">🍏</span>
+                        <span class="pwa-tab-label">iPhone</span>
+                        <span class="pwa-tab-arrow">▾</span>
+                    </button>
+                </div>
+
+                <!-- Ενιαίο Panel Περιεχομένου Οδηγιών (Αρχικά κλειστό, ανοίγει με κλικ σε οποιοδήποτε κουμπί) -->
+                <div class="pwa-tab-panels" id="pwa-tab-panels">
+                    <!-- 1. Google Chrome -->
+                    <div class="pwa-tab-pane" id="pane-chrome">
+                        <div class="acc-device-group">
+                            <div class="acc-device-title">🤖 Android:</div>
+                            <div class="acc-device-steps">
+                                Πατήστε το μενού του Chrome (τρεις τελείες <strong>⋮</strong> επάνω δεξιά) και επιλέξτε <strong>«Εγκατάσταση εφαρμογής»</strong> (ή <strong>«Προσθήκη στην αρχική οθόνη»</strong>).
+                            </div>
+                        </div>
+                        <div class="acc-device-group">
+                            <div class="acc-device-title">💻 Υπολογιστής (Desktop):</div>
+                            <div class="acc-device-steps">
+                                Στη δεξιά πλευρά της γραμμής διευθύνσεων (URL bar), πατήστε το εικονίδιο <strong>Εγκατάστασης (⊕ ή 💻)</strong> ή από το μενού <strong>⋮</strong> &gt; <strong>«Εγκατάσταση Calculator K6»</strong>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Mozilla Firefox -->
+                    <div class="pwa-tab-pane" id="pane-firefox">
+                        <div class="acc-device-group">
+                            <div class="acc-device-title">🤖 Android:</div>
+                            <div class="acc-device-steps">
+                                Πατήστε το μενού του Firefox (τρεις τελείες <strong>⋮</strong>) και επιλέξτε <strong>«Εγκατάσταση»</strong> (ή <strong>«Προσθήκη στην αρχική οθόνη»</strong>).
+                            </div>
+                        </div>
+                        <div class="acc-device-group">
+                            <div class="acc-device-title">💻 Υπολογιστής (Desktop):</div>
+                            <div class="acc-device-steps">
+                                Κάντε δεξί κλικ στην καρτέλα &gt; <strong>«Καρφίτσωμα καρτέλας» (Pin Tab)</strong> ή πατήστε το αστέρι στη γραμμή διευθύνσεων για άμεση προσθήκη στους σελιδοδείκτες.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. iPhone / iPad (Safari) -->
+                    <div class="pwa-tab-pane" id="pane-safari">
+                        <div class="acc-device-group">
+                            <div class="acc-device-title">🍏 iPhone / iPad (Safari):</div>
+                            <div class="acc-device-steps">
+                                1. Στο κάτω μέρος της οθόνης στο Safari, πατήστε το εικονίδιο <strong>Κοινοποίησης (Share ⎋)</strong>.<br>
+                                2. Κάντε κύλιση προς τα κάτω και επιλέξτε <strong>«Προσθήκη στην οθόνη αφετηρίας» (Add to Home Screen ➕)</strong>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="modal-license">
-            <span class="license-badge">GNU GPLv3</span>
-            <div class="license-copyright">Copyright &copy; 2025 George Petrakis</div>
+
+        <!-- δ) Κάρτα Άδειας Χρήσης (GNU GPLv3, Copyright & link) -->
+        <div class="modal-license-card">
+            <div class="license-badge-row">
+                <span class="license-badge">GNU GPLv3</span>
+            </div>
+            <div class="license-copyright">Copyright &copy; 2026 George Petrakis</div>
             <div class="license-desc">
                 Διατίθεται υπό την άδεια <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener noreferrer" class="license-link">GNU GPLv3 ↗</a>
             </div>
         </div>
-        
-        <button class="modal-close" onclick="closeSettings()">Close</button>
+
+        <!-- ε) Κουμπί «Κλείσιμο» στο footer -->
+        <div class="modal-footer">
+            <button type="button" class="modal-close-btn" onclick="closeInfoModal()">Κλείσιμο</button>
+        </div>
     </div>
 </div>
 
@@ -1120,7 +1524,7 @@
 
     // --- GLOBAL CLICK HANDLER ---
     document.getElementById('calc-body').addEventListener('click', function(e) {
-        if (e.target.tagName === 'BUTTON' || e.target.closest('.settings-toggle')) return;
+        if (e.target.tagName === 'BUTTON' || e.target.closest('.top-actions-group') || e.target.closest('.settings-toggle')) return;
         
         const isTrueMobileTouch = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
         if (!isTrueMobileTouch || e.target.closest('#math-input')) {
@@ -1136,18 +1540,30 @@
         focusCalculatorInput();
     });
 
-    // --- SETTINGS MODAL LOGIC ---
-    function openSettings() {
+    // --- INFO & PWA MODAL LOGIC ---
+    function openInfoModal() {
         if (typeof checkPWAStatus === 'function') {
             checkPWAStatus();
         }
-        document.getElementById('settings-modal').classList.add('active');
+        const modal = document.getElementById('info-modal');
+        if (modal) modal.classList.add('active');
     }
 
-    function closeSettings(e) {
+    function closeInfoModal(e) {
         if (e && e.target !== e.currentTarget) return;
-        document.getElementById('settings-modal').classList.remove('active');
+        const modal = document.getElementById('info-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.querySelectorAll('.pwa-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.pwa-tab-pane').forEach(pane => pane.classList.remove('active'));
+            const panelsContainer = document.getElementById('pwa-tab-panels');
+            if (panelsContainer) panelsContainer.style.display = 'none';
+        }
     }
+
+    // Backward compatibility aliases
+    function openSettings() { openInfoModal(); }
+    function closeSettings(e) { closeInfoModal(e); }
 
     function toggleThemeInsideModal() {
         const body = document.body;
@@ -1162,11 +1578,11 @@
         const icon = document.getElementById('theme-icon');
         const text = document.getElementById('theme-text');
         if (theme === 'dark') {
-            icon.innerHTML = '☀️';
-            text.innerHTML = 'Switch to Light Mode';
+            if (icon) icon.innerHTML = '☀️';
+            if (text) text.innerHTML = 'Light';
         } else {
-            icon.innerHTML = '🌙';
-            text.innerHTML = 'Switch to Dark Mode';
+            if (icon) icon.innerHTML = '🌙';
+            if (text) text.innerHTML = 'Dark';
         }
     }
 
@@ -3595,19 +4011,96 @@
         });
     }
 
-    // ESC key closes presentation modal
+    // ESC key closes presentation modal & info modal
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            const modal = document.getElementById('presentation-modal');
-            if (modal && modal.classList.contains('active')) {
+            const infoModal = document.getElementById('info-modal');
+            if (infoModal && infoModal.classList.contains('active')) {
+                closeInfoModal();
+            }
+            const presModal = document.getElementById('presentation-modal');
+            if (presModal && presModal.classList.contains('active')) {
                 closeClassroomPresentation();
             }
         }
     });
 
     // =========================================================================
-    // --- SERVICE WORKER REGISTRATION & PWA INSTALL MANAGEMENT ---
+    // --- ΕΠΙΣΗΜΟΣ ΣΥΝΔΕΣΜΟΣ ΦΙΛΟΞΕΝΙΑΣ ΕΦΑΡΜΟΓΗΣ (APP HOSTING URL) ---
     // =========================================================================
+    const APP_HOSTING_URL = 'https://tethragon.github.io/calc_K6/';
+
+    // --- PWA HORIZONTAL TABS HANDLER ---
+    function togglePWATab(tabId) {
+        const targetBtn = document.getElementById(`pwa-tab-${tabId}`);
+        const targetPane = document.getElementById(`pane-${tabId}`);
+        const panelsContainer = document.getElementById('pwa-tab-panels');
+        if (!targetBtn || !targetPane || !panelsContainer) return;
+
+        const isCurrentlyActive = targetBtn.classList.contains('active');
+
+        // Deactivate all tab buttons & panes
+        document.querySelectorAll('.pwa-tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.pwa-tab-pane').forEach(pane => pane.classList.remove('active'));
+
+        if (isCurrentlyActive) {
+            panelsContainer.style.display = 'none';
+        } else {
+            targetBtn.classList.add('active');
+            targetPane.classList.add('active');
+            panelsContainer.style.display = 'block';
+        }
+    }
+    function toggleAccordion(tabId) { togglePWATab(tabId); }
+
+    // --- TOP SHARE BUTTON HANDLER ---
+    async function handleTopShareClick() {
+        const btn = document.getElementById('top-share-btn');
+        const origHTML = btn ? btn.innerHTML : '';
+        const origTitle = btn ? btn.title : '';
+
+        // 1. Αντιγραφή στο πρόχειρο του επίσημου συνδέσμου
+        let copied = false;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(APP_HOSTING_URL);
+                copied = true;
+            } catch (err) {
+                console.warn('Clipboard writeText failed:', err);
+            }
+        }
+
+        if (!copied) {
+            try {
+                const tempInput = document.createElement('input');
+                tempInput.value = APP_HOSTING_URL;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                copied = true;
+            } catch (err) {
+                console.warn('Fallback copy failed:', err);
+            }
+        }
+
+        // 2. Το κουμπί Share μετατρέπεται στιγμιαία σε πράσινο με τικ (✓) και τίτλο «Αντιγράφηκε!» για 2 δευτερόλεπτα
+        if (btn) {
+            btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            btn.classList.add('btn-share-success');
+            btn.title = 'Αντιγράφηκε!';
+            setTimeout(() => {
+                btn.innerHTML = origHTML;
+                btn.classList.remove('btn-share-success');
+                btn.title = origTitle || 'Κοινοποίηση εφαρμογής';
+            }, 2000);
+        }
+
+        // 3. Εμφάνιση floating Toast notification στο επάνω μέρος της οθόνης για 2,8 δευτερόλεπτα
+        showToastNotification('Ο σύνδεσμος της εφαρμογής αντιγράφηκε στο πρόχειρο!');
+    }
+
+    // --- SERVICE WORKER REGISTRATION & PWA INSTALL MANAGEMENT ---
     let deferredPWAInstallPrompt = null;
 
     if ('serviceWorker' in navigator) {
@@ -3622,56 +4115,26 @@
         });
     }
 
-    function togglePWAGuide(force) {
-        const guideBox = document.getElementById('pwa-guide-box');
-        if (!guideBox) return;
-        if (typeof force === 'boolean') {
-            guideBox.style.display = force ? 'block' : 'none';
-        } else {
-            guideBox.style.display = (guideBox.style.display === 'none' || !guideBox.style.display) ? 'block' : 'none';
-        }
-    }
-
     function checkPWAStatus() {
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                              window.navigator.standalone === true;
-        const container = document.getElementById('pwa-install-container');
-        const installBtn = document.getElementById('pwa-install-btn');
-        const pwaText = document.getElementById('pwa-text');
-        const pwaIcon = document.getElementById('pwa-icon');
-
-        if (!container || !installBtn) return;
-
-        // Το κουμπί εγκατάστασης είναι πλέον πάντοτε ορατό στο modal ρυθμίσεων
-        container.style.display = 'block';
+        const directInstallContainer = document.getElementById('pwa-direct-install-container');
+        const standaloneBadge = document.getElementById('pwa-standalone-badge');
 
         if (isStandalone) {
-            installBtn.disabled = true;
-            installBtn.style.opacity = '0.75';
-            installBtn.style.cursor = 'default';
-            if (pwaIcon) pwaIcon.innerText = '✅';
-            if (pwaText) pwaText.innerText = 'Εφαρμογή Εγκατεστημένη';
-            togglePWAGuide(false);
+            if (standaloneBadge) standaloneBadge.style.display = 'flex';
+            if (directInstallContainer) directInstallContainer.style.display = 'none';
             return;
         }
 
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        const isAndroid = /Android/i.test(navigator.userAgent);
+        if (standaloneBadge) standaloneBadge.style.display = 'none';
 
-        if (isIOS) {
-            if (pwaIcon) pwaIcon.innerText = '📲';
-            if (pwaText) pwaText.innerText = 'Εγκατάσταση σε iPhone / iPad';
-            return;
+        // Το κουμπί άμεσης εγκατάστασης εμφανίζεται αυτόματα μόνο όταν υποστηρίζεται (μέσω beforeinstallprompt event)
+        if (deferredPWAInstallPrompt) {
+            if (directInstallContainer) directInstallContainer.style.display = 'block';
+        } else {
+            if (directInstallContainer) directInstallContainer.style.display = 'none';
         }
-
-        if (isAndroid) {
-            if (pwaIcon) pwaIcon.innerText = '📲';
-            if (pwaText) pwaText.innerText = 'Εγκατάσταση σε Android';
-            return;
-        }
-
-        if (pwaIcon) pwaIcon.innerText = '📲';
-        if (pwaText) pwaText.innerText = 'Εγκατάσταση Εφαρμογής (PWA)';
     }
 
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -3683,7 +4146,6 @@
     window.addEventListener('appinstalled', () => {
         deferredPWAInstallPrompt = null;
         checkPWAStatus();
-        togglePWAGuide(false);
         showToastNotification('🎉 Η εφαρμογή εγκαταστάθηκε επιτυχώς στη συσκευή σας!');
     });
 
@@ -3699,83 +4161,12 @@
             deferredPWAInstallPrompt.prompt();
             deferredPWAInstallPrompt.userChoice.then((choiceResult) => {
                 if (choiceResult && choiceResult.outcome === 'accepted') {
-                    console.log('PWA installation accepted');
                     showToastNotification('🎉 Ευχαριστούμε για την εγκατάσταση!');
-                    togglePWAGuide(false);
                 }
                 deferredPWAInstallPrompt = null;
                 checkPWAStatus();
             });
-        } else {
-            // Άνοιγμα οδηγιών για Android, iPhone ή PC
-            togglePWAGuide(true);
-
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isAndroid = /Android/i.test(navigator.userAgent);
-
-            if (isIOS) {
-                showToastNotification('🍏 iPhone/iPad: Πατήστε Κοινοποίηση ⎋ ➔ Προσθήκη στην οθόνη αφετηρίας ➕');
-            } else if (isAndroid) {
-                showToastNotification('🤖 Android: Πατήστε ⋮ ➔ «Εγκατάσταση εφαρμογής» ή «Προσθήκη στην αρχική οθόνη»');
-            } else {
-                showToastNotification('💻 Υπολογιστής: Πατήστε το εικονίδιο ⊕ στη γραμμή διευθύνσεων!');
-            }
         }
-    }
-
-    // --- SHARE CALCULATOR APP ---
-    async function shareCalculatorApp() {
-        const canonicalUrl = 'https://tethragon.github.io/calc_K6/';
-        let shareUrl = canonicalUrl;
-        if (window.location && window.location.hostname && window.location.hostname.includes('github.io')) {
-            shareUrl = window.location.href.split('?')[0].split('#')[0];
-        }
-
-        const shareData = {
-            title: 'Calculator K6',
-            text: 'Calculator K6 - Εκπαιδευτική & Επιστημονική Αριθμομηχανή',
-            url: shareUrl
-        };
-
-        // 1. Αντιγραφή στο Clipboard (πάντα, για άμεση επικόλληση σε άλλες εφαρμογές)
-        let copySuccess = false;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            try {
-                await navigator.clipboard.writeText(shareUrl);
-                copySuccess = true;
-            } catch (err) {
-                console.warn('Clipboard writeText failed:', err);
-            }
-        }
-
-        if (!copySuccess) {
-            try {
-                const tempInput = document.createElement('input');
-                tempInput.value = shareUrl;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempInput);
-                copySuccess = true;
-            } catch (err) {
-                console.warn('Fallback copy failed:', err);
-            }
-        }
-
-        // 2. Ενεργοποίηση Native Web Share API αν υποστηρίζεται (π.χ. σε κινητά Android/iOS)
-        if (navigator.share) {
-            try {
-                await navigator.share(shareData);
-                showToastNotification('📋 Ο σύνδεσμος κοινοποιήθηκε και αντιγράφηκε στο πρόχειρο!');
-                return;
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    console.log('Share error:', err);
-                }
-            }
-        }
-
-        showToastNotification('📋 Ο σύνδεσμος της εφαρμογής αντιγράφηκε στο πρόχειρο!');
     }
 </script>
 
